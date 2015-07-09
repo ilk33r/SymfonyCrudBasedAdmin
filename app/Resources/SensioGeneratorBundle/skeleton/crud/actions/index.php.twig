@@ -1,0 +1,48 @@
+
+    /**
+{% block phpdoc_method_header %}
+     * Lists all {{ entity }} entities.
+{% endblock phpdoc_method_header %}
+     *
+{% block phpdoc_method_annotations %}
+{% if 'annotation' == format %}
+     * @Route("/", name="{{ route_name_prefix }}")
+     * @Method("GET")
+     * @Template()
+{% endif %}
+{% endblock phpdoc_method_annotations %}
+     */
+{% block method_definition %}
+    public function indexAction($pageNumber = 1)
+{% endblock method_definition %}
+    {
+{% block method_body %}
+		$displayPerPage		= 50;
+		$startRow			= ($pageNumber - 1) * $displayPerPage;
+
+		$em = $this->getDoctrine()->getManager()->getRepository('{{ bundle }}:{{ entity }}');
+		$entities = $em->createQueryBuilder('cr');
+		$entities->orderBy('cr.id', 'ASC')->setFirstResult($startRow)->setMaxResults($displayPerPage);
+
+		$paginator = new Paginator($entities, $fetchJoinCollection = true);
+		$resultCount = count($paginator);
+		$pageCount = ceil($resultCount / $displayPerPage);
+
+{% endblock method_body %}
+
+{% block method_return %}
+{% if 'annotation' == format %}
+        return array(
+            'entities' => $paginator,
+			'pageCount' => $pageCount,
+			'currentPage' => $pageNumber
+        );
+{% else %}
+        return $this->render('{{ bundle }}:{{ entity|replace({'\\': '/'}) }}:index.html.twig', array(
+            'entities' => $paginator,
+			'pageCount' => $pageCount,
+			'currentPage' => $pageNumber
+        ));
+{% endif %}
+{% endblock method_return %}
+    }

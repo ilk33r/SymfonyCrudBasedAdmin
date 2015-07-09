@@ -1,0 +1,17 @@
+ilkerozcan\PortfolioBundle\Entity\SiteSettings:
+    type: entity
+    table: null
+    id:
+        id:
+            type: integer
+            id: true
+            generator:
+                strategy: AUTO
+    fields:
+        settingKey:
+            type: string
+            length: '60'
+            unique: true
+        settingValue:
+            type: text
+    lifecycleCallbacks: {  }

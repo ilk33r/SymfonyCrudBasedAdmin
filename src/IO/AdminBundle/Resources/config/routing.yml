@@ -1,0 +1,40 @@
+io_admin_homepage:
+    path:     /
+    defaults: { _controller: IOAdminBundle:Default:index }
+
+io_admin_clear_cache:
+    path: /cache-clear
+    defaults: { _controller: IOAdminBundle:Default:clear_cache }
+
+io_admin_add_user:
+    path: /users/add
+    defaults: { _controller: IOAdminBundle:Default:add_user }
+
+io_admin_create_user:
+    path: /users/create
+    defaults: { _controller: IOAdminBundle:Default:create_user }
+    methods:  [POST]
+
+io_admin_list_users:
+    path: /users/{pageNumber}
+    defaults: { _controller: IOAdminBundle:Default:list_users, pageNumber: 1 }
+    requirements:
+        pageNumber:  \d+
+
+io_admin_show_user:
+    path: /users/{userName}/view
+    defaults: { _controller: IOAdminBundle:Default:show_user }
+
+io_admin_edit_user:
+    path: /users/{userName}/edit
+    defaults: { _controller: IOAdminBundle:Default:edit_user }
+
+io_admin_update_user:
+    path: /users/update
+    defaults: { _controller: IOAdminBundle:Default:update_user }
+    methods:  [POST, PUT]
+
+io_admin_delete_user:
+    path: /users/{userName}/delete
+    defaults: { _controller: IOAdminBundle:Default:delete_user }
+    methods:  [POST, DELETE]

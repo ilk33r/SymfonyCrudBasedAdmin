@@ -1,0 +1,74 @@
+{% extends "IOAdminBundle::masterpage.html.twig" %}
+
+{% block AdminMainPage %}
+	<table class="table table-hover">
+		<thead>
+		<tr>
+			<th>Stats</th>
+			<th>Value</th>
+			<th>Stats</th>
+			<th>Value</th>
+		</tr>
+		</thead>
+		<tbody>
+			<tr>
+				<td><strong>Symfony Version</strong></td>
+				<td>{{ symfonyVersion }}</td>
+				<td><strong>Version End Of Life</strong></td>
+				<td>{{ symfonyEOL }}</td>
+			</tr>
+			<tr class="active">
+				<td><strong>Server Timezone</strong></td>
+				<td>{{ timezone }}</td>
+				<td><strong>PHP Version</strong></td>
+				<td>{{ phpVersion }}</td>
+			</tr>
+
+			<tr>
+				<td><strong>PHP SAPI</strong></td>
+				<td>{{ sapi }}</td>
+				<td><strong>Server OS</strong></td>
+				<td>{{ os }}</td>
+			</tr>
+			<tr class="active">
+				<td><strong>Post Max Size</strong></td>
+				<td>{{ postMaxSize }}</td>
+				<td><strong>GD Support</strong></td>
+				<td>{{ gdSupport }}</td>
+			</tr>
+
+			<tr>
+				<td><strong>Opcache Support</strong></td>
+				<td>{{ opCacheSupport }}</td>
+				<td><strong>Server Software</strong></td>
+				<td>{{ serverSoftware }}</td>
+			</tr>
+			<tr class="active">
+				<td><strong>Server IP</strong></td>
+				<td>{{ serverIp }}</td>
+				<td><strong>Database Name</strong></td>
+				<td>{{ dbName }}</td>
+			</tr>
+
+			<tr>
+				<td><strong>Database Size</strong></td>
+				<td>{{ dbSize }}</td>
+				<td><strong>Number of Records</strong></td>
+				<td>{{ numRecords }}</td>
+			</tr>
+			<tr class="active">
+				<td><strong>Biggest Table</strong></td>
+				<td>{{ biggestTable }}</td>
+				<td><strong>Biggest Table Size</strong></td>
+				<td>{{ biggestTableSize }}</td>
+			</tr>
+
+			<tr>
+				<td><strong>Cache Size:</strong></td>
+				<td>{{ cacheSize }}</td>
+				<td colspan="2" rowspan="1"><a href="{{ path('io_admin_clear_cache') }}" class="btn {{ cacheButtonClass }}">Clear Cache</a></td>
+			</tr>
+		</tbody>
+	</table>
+
+{% endblock %}

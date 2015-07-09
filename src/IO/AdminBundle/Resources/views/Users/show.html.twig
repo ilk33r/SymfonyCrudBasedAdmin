@@ -1,0 +1,80 @@
+{% extends "IOAdminBundle::masterpage.html.twig" %}
+
+{% block AdminBreadCrumb %}
+	<ul class="breadcrumb">
+		<li><a href="{{ path('io_admin_homepage') }}">Admin</a><span class="divider"></span></li>
+		<li><a href="{{ path('io_admin_list_users') }}">Users</a><span class="divider"></span></li>
+		<li class="active">View</li>
+	</ul>
+{% endblock %}
+
+{% block AdminMainPage %}
+
+	{% if addSuccess %}
+	<div class="alert alert-dismissable alert-success">
+		<button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+		<h4>Success!</h4>
+		<p>User has been added.</p>
+	</div>
+	{% endif %}
+
+	<div class="adminForm">
+		<div class="form-group">
+			<label for="Id">Id</label>
+			<fieldset disabled><textarea readonly class="form-control" id="ID">{{ entity.id }}</textarea></fieldset>
+		</div>
+		<div class="form-group">
+			<label for="UserName">User Name</label>
+			<fieldset disabled><textarea readonly class="form-control" id="UserName">{{ entity.username }}</textarea></fieldset>
+		</div>
+		<div class="form-group">
+			<label for="Email">E-Mail</label>
+			<fieldset disabled><textarea readonly class="form-control" id="Email">{{ entity.email }}</textarea></fieldset>
+		</div>
+		<div class="form-group">
+			<label for="enabled">Enabled</label>
+			<fieldset disabled><textarea readonly class="form-control" id="enabled">{% if entity.enabled == 1 %}YES{% else %}NO{% endif %}</textarea></fieldset>
+		</div>
+		<div class="form-group">
+			<label for="locked">Locked</label>
+			<fieldset disabled><textarea readonly class="form-control" id="locked">{% if entity.locked == 1 %}YES{% else %}NO{% endif %}</textarea></fieldset>
+		</div>
+		<div class="form-group">
+			<label for="expired">Expired</label>
+			<fieldset disabled><textarea readonly class="form-control" id="expired">{% if entity.expired == 1 %}YES{% else %}NO{% endif %}</textarea></fieldset>
+		</div>
+		<div class="form-group">
+			<label for="lastLogin">Last Login</label>
+			<fieldset disabled><textarea readonly class="form-control" id="lastLogin">{{ entity.lastLogin|date('Y-m-d H:i:s') }}</textarea></fieldset>
+		</div>
+		<div class="form-group">
+			<label for="passwordRequested">Password Requested At</label>
+			<fieldset disabled><textarea readonly class="form-control" id="passwordRequested">{% if entity.passwordRequestedAt is not empty %}{{ entity.passwordRequestedAt|date('Y-m-d H:i:s') }}{% endif %}</textarea></fieldset>
+		</div>
+		<div class="form-group">
+			<label for="confirmationToken">Confirmation Token</label>
+			<fieldset><textarea readonly class="form-control" id="confirmationToken">{% if entity.confirmationToken is not empty %}{{ entity.confirmationToken }}{% endif %}</textarea></fieldset>
+		</div>
+		<div class="form-group">
+			<label for="roles">Roles</label>
+			<fieldset disabled><textarea readonly class="form-control" id="roles">{{ entity.roles|join('\n') }}</textarea></fieldset>
+		</div>
+
+	</div>
+
+	{{ form_start(delete_form, {'attr': {'role': 'form'}}) }}
+	<div class="adminForm">
+		<a href="{{ path('io_admin_edit_user', { 'userName': entity.usernameCanonical }) }}" class="btn btn-default pull-right">Edit</a>
+		<div class="clearfix"></div>
+		{% for formName, formRow in delete_form.children %}
+			{% if formName == 'submit' %}
+				{{ form_widget(formRow, {'attr': {'class': 'btn btn-default pull-right'}}) }}
+				<div class="clearfix"></div>
+			{% else %}
+				{{ form_row(formRow) }}
+			{% endif %}
+		{% endfor %}
+	</div>
+	{{ form_end(delete_form) }}
+
+{% endblock %}

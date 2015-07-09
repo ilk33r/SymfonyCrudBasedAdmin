@@ -1,0 +1,8 @@
+ilkerozcan\PortfolioBundle\Entity\User:
+    type:  entity
+    table: users
+    id:
+        id:
+            type: integer
+            generator:
+                strategy: AUTO

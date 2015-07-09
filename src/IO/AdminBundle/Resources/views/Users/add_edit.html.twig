@@ -1,0 +1,63 @@
+{% extends "IOAdminBundle::masterpage.html.twig" %}
+
+{% block AdminBreadCrumb %}
+	<ul class="breadcrumb">
+		<li><a href="{{ path('io_admin_homepage') }}">Admin</a><span class="divider"></span></li>
+		<li><a href="{{ path('io_admin_list_users') }}">Users</a><span class="divider"></span></li>
+		<li class="active">Add / Edit User</li>
+	</ul>
+{% endblock %}
+
+{% block AdminMainPage %}
+
+	{{ form_start(edit_form, {'attr': {'role': 'form'}}) }}
+
+
+	{% if edit_form.vars.errors|length > 0 %}
+		{% for error in edit_form.vars.errors %}
+			<div class="alert alert-dismissable alert-danger">
+				<button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+				<h4>Warning!</h4>
+				<p>{{ error.message }}</p>
+			</div>
+		{% endfor %}
+	{% endif %}
+
+	<div class="adminForm">
+		{% for formName, formRow in edit_form.children %}
+
+			{% if formName == '_token' or formName == 'currentUserName' %}
+				{{ form_row(formRow) }}
+			{% elseif formName == 'submit' %}
+				{{ form_widget(formRow, {'attr': {'class': 'btn btn-default pull-right'}}) }}
+				<div class="clearfix"></div>
+			{% else %}
+				<div class="form-group">
+					{{ form_label(formRow) }}
+					<fieldset>
+						{{ form_widget(formRow, {'attr': {'class': 'form-control'}}) }}
+					</fieldset>
+				</div>
+			{% endif %}
+
+		{% endfor %}
+	</div>
+
+	{{ form_end(edit_form) }}
+
+	{% if isEditForm %}
+	{{ form_start(delete_form, {'attr': {'role': 'form'}}) }}
+	<div class="adminForm">
+		{% for formName, formRow in delete_form.children %}
+			{% if formName == 'submit' %}
+				{{ form_widget(formRow, {'attr': {'class': 'btn btn-default pull-right'}}) }}
+				<div class="clearfix"></div>
+			{% else %}
+				{{ form_row(formRow) }}
+			{% endif %}
+		{% endfor %}
+	</div>
+	{{ form_end(delete_form) }}
+	{% endif %}
+
+{% endblock %}

@@ -1,0 +1,57 @@
+{% block extends %}
+{{ "{% extends 'IOAdminBundle::masterpage.html.twig' %}" }}
+{% endblock extends %}
+
+{% block body %}
+
+{{ "{% block AdminBreadCrumb %}" }}
+	<ul class="breadcrumb">
+		<li><a href="{{ "{{ path('io_admin_homepage') }}" }}">Admin</a><span class="divider"></span></li>
+		<li><a href="{{ "{{ path('" ~ route_name_prefix ~ "') }}" }}">{{ entity }}</a><span class="divider"></span></li>
+		<li class="active">Add</li>
+	</ul>
+{{ "{% endblock %}" }}
+
+{{ "{% block AdminMainPage %}" }}
+	{{ "{{ form_start(form, {'attr': {'role': 'form'}}) }}" }}
+		{{ "{% if form.vars.errors|length > 0 %}" }}
+			{{ "{% for error in form.vars.errors %}" }}
+				<div class="alert alert-dismissable alert-danger">
+					<button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+					<h4>Warning!</h4>
+					<p>{{ "{{ error.message }}" }}</p>
+				</div>
+			{{ "{% endfor %}" }}
+		{{ "{% endif %}" }}
+
+	<div class="adminForm">
+		{{ "{% for formName, formRow in form.children %}" }}
+			{{ "{% if formName == '_token' %}" }}
+				{{ "{{ form_row(formRow) }}" }}
+			{{ "{% elseif formName == 'submit' %}" }}
+				{{ "{{ form_widget(formRow, {'attr': {'class': 'btn btn-default pull-right'}}) }}" }}
+			{{ "{% else %}" }}
+				<div class="form-group">
+					{{ "{{ form_label(formRow) }}" }}
+					<fieldset>
+						{{ "{{ form_widget(formRow, {'attr': {'class': 'form-control'}}) }}" }}
+					</fieldset>
+				</div>
+			{{ "{% endif %}" }}
+		{{ "{% endfor %}" }}
+		<div class="clearfix"></div>
+	</div>
+{{ "{% endblock %}" }}
+
+{% endblock body %}
+
+
+
+
+
+
+
+
+
+
+

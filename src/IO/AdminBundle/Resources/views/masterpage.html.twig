@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<title>Administration Page</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="description" content="Administration Page">
+	<meta name="author" content="ilker Özcan">
+
+	<link href="{{ asset('bundles/ioadmin/css/bootstrap.min.css') }}" rel="stylesheet">
+	<link href="{{ asset('bundles/ioadmin/css/style.css') }}" rel="stylesheet">
+
+	<!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
+	<!--[if lt IE 9]>
+	<script src="{{ asset('bundles/ioadmin/js/html5shiv.js') }}" type="text/javascript"></script>
+	<![endif]-->
+
+	<!-- Fav and touch icons -->
+	<link rel="shortcut icon" href="{{ asset('favicon.ico') }}">
+
+</head>
+
+<body>
+<div class="container-fluid adminContainer">
+	<div class="row clearfix adminHeader">
+		<div class="col-md-12 column"><h2>Administration Page</h2></div>
+	</div>
+	<div class="row clearfix adminPageRow">
+		<div class="col-md-2 column menuArea">
+			<a class="changePasswordLink" href="{{ path('fos_user_change_password') }}"><i class="glyphicon glyphicon-wrench" aria-hidden="true"></i>Welcome, {{ app.user.username }}</a>
+			{% for menuItem in io_admin.adminMenu %}
+				<span class="label menuGroup"><i class="glyphicon glyphicon-plus" aria-hidden="true"></i>{{ menuItem.category }}</span>
+				<ul>
+					<li><a href="{{ path(menuItem.path) }}" class="text-anchor">List {{ menuItem.category }}</a></li>
+					{% if menuItem.hasAddPermission == true %}
+					<li><a href="{{ path(menuItem.path ~ '_new') }}" class="text-anchor">Add {{ menuItem.category }}</a></li>
+					{% endif %}
+				</ul>
+			{% endfor %}
+			<span class="label menuGroup"><i class="glyphicon glyphicon-user" aria-hidden="true"></i>Users</span>
+			<ul>
+				<li><a href="{{ path('io_admin_list_users') }}" class="text-anchor">List Users</a></li>
+				<li><a href="{{ path('io_admin_add_user') }}" class="text-anchor">Add User</a></li>
+				<li><a href="{{ path('fos_user_security_logout') }}" class="text-anchor">Logout</a></li>
+			</ul>
+		</div>
+		<div class="col-md-10 column contentArea">
+
+			{% block AdminBreadCrumb %}
+
+			{% endblock %}
+
+			{% block AdminMainPage %}
+
+			{% endblock %}
+
+			{% block AdminPagination %}
+
+			{% endblock %}
+		</div>
+	</div>
+</div>
+
+<script type="text/javascript" src="{{ asset('bundles/ioadmin/js/jquery.min.js') }}"></script>
+<script type="text/javascript" src="{{ asset('bundles/ioadmin/js/bootstrap.min.js') }}"></script>
+<script type="text/javascript" src="{{ asset('bundles/ioadmin/js/scripts.js') }}"></script>
+
+</body>
+</html>

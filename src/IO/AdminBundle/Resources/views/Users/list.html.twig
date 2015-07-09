@@ -1,0 +1,68 @@
+{% extends "IOAdminBundle::masterpage.html.twig" %}
+
+{% block AdminBreadCrumb %}
+	<ul class="breadcrumb">
+		<li><a href="{{ path('io_admin_homepage') }}">Admin</a><span class="divider"></span></li>
+		<li class="active">Users</li>
+	</ul>
+{% endblock %}
+
+{% block AdminMainPage %}
+	<table class="table table-hover">
+		<thead>
+		<tr>
+			<th>ID</th>
+			<th>Username</th>
+			<th>E-Mail</th>
+			<th>Last Login</th>
+			<th>Password Requested At</th>
+			<th>Roles</th>
+			<th>Enabled</th>
+			<th>Locked</th>
+			<th>Expired</th>
+			<th>Actions</th>
+		</tr>
+		</thead>
+		<tbody>
+		{% for entity in entities %}
+			<tr>
+				<td><a href="{{ path('io_admin_show_user', { 'userName': entity.usernameCanonical }) }}">{{ entity.id }}</a></td>
+				<td><a href="{{ path('io_admin_show_user', { 'userName': entity.usernameCanonical }) }}">{{ entity.username }}</a></td>
+				<td><a href="{{ path('io_admin_show_user', { 'userName': entity.usernameCanonical }) }}">{{ entity.email }}</a></td>
+				<td><a href="{{ path('io_admin_show_user', { 'userName': entity.usernameCanonical }) }}">{{ entity.lastLogin|date('Y-m-d H:i:s') }}</a></td>
+				<td><a href="{{ path('io_admin_show_user', { 'userName': entity.usernameCanonical }) }}">{% if entity.passwordRequestedAt is not empty %}{{ entity.passwordRequestedAt|date('Y-m-d H:i:s') }}{% endif %}</a></td>
+				<td><a href="{{ path('io_admin_show_user', { 'userName': entity.usernameCanonical }) }}">{{ entity.roles|join('<br />') }}</a></td>
+				<td><a href="{{ path('io_admin_show_user', { 'userName': entity.usernameCanonical }) }}">{% if entity.enabled == 1 %}YES{% else %}NO{% endif %}</a></td>
+				<td><a href="{{ path('io_admin_show_user', { 'userName': entity.usernameCanonical }) }}">{% if entity.locked == 1 %}YES{% else %}NO{% endif %}</a></td>
+				<td><a href="{{ path('io_admin_show_user', { 'userName': entity.usernameCanonical }) }}">{% if entity.expired == 1 %}YES{% else %}NO{% endif %}</a></td>
+				<td>
+					<a class="optionLink mtmSelectLink" href="{{ path('io_admin_edit_user', { 'userName': entity.usernameCanonical }) }}" title="Edit" data-displayName="Edit"><i class="glyphicon glyphicon-edit"></i></a>
+					<a class="optionLink mtmSelectLink" href="{{ path('io_admin_show_user', { 'userName': entity.usernameCanonical }) }}" title="Show" data-displayName="Show"><i class="glyphicon glyphicon-eye-open"></i></a>
+				</td>
+			</tr>
+		{% endfor %}
+		</tbody>
+	</table>
+{% endblock %}
+
+{% block AdminPagination %}
+	{% if pageCount > 1 %}
+	<ul class="pagination pull-right">
+		{% if currentPage > 1 %}
+		<li><a href="{{ path('io_admin_list_users', {'pageNumber': currentPage - 1 }) }}">Prev</a></li>
+		{% endif %}
+
+		{% for i in 1..pageCount %}
+			{% if i == currentPage %}
+				<li><a class="active">{{ i }}</a></li>
+			{% else %}
+				<li><a href="{{ path('io_admin_list_users', {'pageNumber' : i}) }}">{{ i }}</a></li>
+			{% endif %}
+		{% endfor %}
+
+		{% if currentPage < pageCount %}
+		<li><a href="{{ path('io_admin_list_users', {'pageNumber': currentPage + 1 }) }}">Next</a></li>
+		{% endif %}
+	</ul>
+	{% endif %}
+{% endblock %}

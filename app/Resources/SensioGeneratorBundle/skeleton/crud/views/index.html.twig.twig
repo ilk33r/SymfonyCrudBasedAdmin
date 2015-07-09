@@ -1,0 +1,76 @@
+{% block extends %}
+{{ "{% extends 'IOAdminBundle::masterpage.html.twig' %}" }}
+{% endblock extends %}
+
+{% block body %}
+
+{{ "{% block AdminBreadCrumb %}" }}
+	<ul class="breadcrumb">
+		<li><a href="{{ "{{ path('io_admin_homepage') }}" }} ">Admin</a><span class="divider"></span></li>
+		<li class="active">{{ entity }}</li>
+	</ul>
+{{ "{% endblock %}" }}
+
+{{ "{% block AdminMainPage %}" }}
+	<table class="table table-hover">
+		<thead>
+			<tr>
+				{%- for field, metadata in fields %}
+
+					<th>{{ field|capitalize }}</th>
+
+				{%- endfor %}
+				<th>Actions</th>
+			</tr>
+		</thead>
+		<tbody>
+		{{ "{% for entity in entities %}" }}
+				<tr>
+					{%- for field, metadata in fields %}
+						{%- if metadata.type in ['date', 'datetime'] %}
+
+							<td>{{ '{% if entity.' ~ field|replace({'_': ''}) ~ ' %}{{ entity.' ~ field|replace({'_': ''}) ~ '|date(\'Y-m-d H:i:s\') }}{% endif %}' }}</td>
+
+						{%- else %}
+
+							<td><a href="{{ "{{ path('" ~ route_name_prefix ~ "_show', { 'id': entity."~ identifier ~" }) }}" }}">{{ '{{ entity.' ~ field|replace({'_': ''}) ~ ' }}' }}</a></td>
+
+						{%- endif %}
+
+						{%- if loop.last %}
+
+							<td>
+								<a class="optionLink mtmSelectLink" href="{{ "{{ path('" ~ route_name_prefix ~ "_edit', { 'id': entity."~ identifier ~" }) }}" }}" title="Edit" data-displayName="Edit"><i class="glyphicon glyphicon-edit"></i></a>
+								<a class="optionLink mtmSelectLink" href="{{ "{{ path('" ~ route_name_prefix ~ "_show', { 'id': entity."~ identifier ~" }) }}" }}" title="Show" data-displayName="Show"><i class="glyphicon glyphicon-eye-open"></i></a>
+							</td>
+
+						{%- endif %}
+					{%- endfor %}
+				</tr>
+		{{ "{% endfor %}" }}
+		</tbody>
+	</table>
+
+{{ "{% endblock %}" }}
+
+{{ "{% block AdminPagination %}" }}
+	{{ "{% if pageCount > 1 %}" }}
+		<ul class="pagination pull-right">
+			{{ "{% if currentPage > 1 %}" }}
+				<li><a href="{{ "{{ path('" ~ route_name_prefix ~ "', {'pageNumber': currentPage - 1 }) }}" }}">Prev</a></li>
+			{{ "{% endif %}" }}
+			{{ "{% for i in 1..pageCount %}" }}
+				{{ "{% if i == currentPage %}" }}
+					<li><a class="active">{{ "{{ i }}" }}</a></li>
+				{{ "{% else %}" }}
+					<li><a href="{{ "{{ path('" ~ route_name_prefix ~ "', {'pageNumber' : i}) }}" }}">{{ "{{ i }}" }}</a></li>
+				{{ "{% endif %}" }}
+			{{ "{% endfor %}" }}
+			{{ "{% if currentPage < pageCount %}" }}
+				<li><a href="{{ "{{ path('" ~ route_name_prefix ~ "', {'pageNumber': currentPage + 1 }) }}" }}">Next</a></li>
+			{{ "{% endif %}" }}
+		</ul>
+	{{ "{% endif %}" }}
+{{ "{% endblock %}" }}
+
+{% endblock body %}
