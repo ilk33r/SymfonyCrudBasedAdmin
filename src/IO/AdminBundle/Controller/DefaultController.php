@@ -8,6 +8,8 @@ use Symfony\Component\HttpKernel\Kernel;
 use Symfony\Component\Form\FormError;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Filesystem\Exception;
+use Symfony\Component\Process\Exception\InvalidArgumentException;
+
 
 use Doctrine\ORM\Tools\Pagination\Paginator;
 use Doctrine\DBAL\DBALException;
@@ -313,9 +315,9 @@ class DefaultController extends Controller
 		try
 		{
 			$fs->remove($this->container->getParameter('kernel.cache_dir'));
-		}catch (Exception $e)
+		}catch (InvalidArgumentException $e)
 		{
-
+			return $this->redirect($this->generateUrl('io_admin_homepage'));
 		}
 
 		return $this->redirect($this->generateUrl('io_admin_homepage'));

@@ -1,0 +1,7 @@
+services:
+#    io_services.example:
+#        class: IO\ServicesBundle\Example
+#        arguments: [@service_id, "plain_value", %parameter%]
+    io_services.file_uploader:
+        class: IO\ServicesBundle\Services\AjaxImageUploader
+        arguments: ['@kernel']

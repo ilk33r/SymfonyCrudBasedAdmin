@@ -31,7 +31,7 @@ function deleteAction()
 }
 
 // rich text editor
-function plfRichText(inputId)
+function IORichText(inputId)
 {
 	var instance			= this;
 
@@ -125,8 +125,8 @@ function plfRichText(inputId)
 	this.imageResizeStartHeight		= 0;
 }
 
-plfRichText.prototype			= {
-	constructor					: plfRichText,
+IORichText.prototype			= {
+	constructor					: IORichText,
 	bold						: function()
 	{
 		document.execCommand('bold', false);
@@ -335,12 +335,12 @@ plfRichText.prototype			= {
 };
 
 // ajax image uploader
-function plfImageField(inputId, adminPath, uploadPath)
+function IOImageField(inputId, uploadPath, uploadRoute)
 {
 	this.inputId				= inputId;
 	this.imageUploading			= false;
-	this.adminPath				= adminPath;
 	this.uploadPath				= uploadPath;
+	this.uploadRoute			= uploadRoute;
 	var instance				= this;
 
 	$('#fakeInput-' + inputId).change(function (event)
@@ -349,13 +349,13 @@ function plfImageField(inputId, adminPath, uploadPath)
 			instance.imageFileStatus(event);
 	});
 
-	$('#adminImageUploadArea-'+inputId).click(function()
+	$('#uploadArea-'+inputId).click(function()
 	{
 		if(!instance.imageUploading)
 			$('#fakeInput-'+inputId).click();
 	});
 
-	$('#adminImageUploadArea-'+inputId).bind('dragover', function (event)
+	$('#uploadArea-'+inputId).bind('dragover', function (event)
 	{
 		$(this).css('border-style', 'dashed');
 		$(this).css('border-width', '2px');
@@ -363,7 +363,7 @@ function plfImageField(inputId, adminPath, uploadPath)
 		event.preventDefault();
 	});
 
-	$('#adminImageUploadArea-'+inputId).bind('dragleave', function (event)
+	$('#uploadArea-'+inputId).bind('dragleave', function (event)
 	{
 		$(this).css('border-style', 'solid');
 		$(this).css('border-width', '1px');
@@ -371,7 +371,7 @@ function plfImageField(inputId, adminPath, uploadPath)
 		event.preventDefault();
 	});
 
-	$('#adminImageUploadArea-'+inputId).bind('drop', function (evt)
+	$('#uploadArea-'+inputId).bind('drop', function (evt)
 	{
 		$(this).css('border-style', 'solid');
 		$(this).css('border-width', '1px');
@@ -422,8 +422,8 @@ function plfImageField(inputId, adminPath, uploadPath)
 	this.setupModal();
 }
 
-plfImageField.prototype			= {
-	constructor					: plfImageField,
+IOImageField.prototype			= {
+	constructor					: IOImageField,
 	imageFileStatus				: function(event)
 	{
 		var fileType;
@@ -477,12 +477,12 @@ plfImageField.prototype			= {
 	uploadImage					: function(file, fileType, fileName)
 	{
 		this.imageUploading		= true;
-		this.setProgressbar(0);
+		this.setProgressbar(10);
 		$('#progress-' + this.inputId).show();
 
 		var reader						= new FileReader();
 		var instance					= this;
-		var uploadUrl					= this.adminPath + '/custom/uploadImage/';
+		var uploadUrl					= this.uploadRoute;
 
 		reader.onloadend = function()
 		{
@@ -497,8 +497,7 @@ plfImageField.prototype			= {
 						"imageData"		: fileData,
 						"imageType"		: fileType,
 						"imageName"		: fileName,
-						"fieldId"		: instance.inputId,
-						"uploadPath"	: instance.uploadPath
+						"fieldId"		: instance.inputId
 					}),
 					dataType: 'json',
 					type: 'POST',
@@ -514,11 +513,12 @@ plfImageField.prototype			= {
 					{
 						if(response.status)
 						{
-							instance.imageUploadComplete(response);
+							instance.imageUploading			= false;
+							instance.imageUploadComplete(response.data);
 						}else{
 							instance.imageUploading			= false;
 							instance.setProgressbar(100);
-							instance.setError('Error!', response.msg);
+							instance.setError('Error!', response.data);
 						}
 					},
 					error: function()
@@ -533,14 +533,13 @@ plfImageField.prototype			= {
 
 		reader.readAsDataURL(file);
 	},
-	imageUploadComplete			: function(response)
+	imageUploadComplete			: function(fileName)
 	{
 		this.setProgressbar(100);
 		this.imageUploading		= false;
-		var imageUrl			= response.filePath + '/' + this.uploadPath + response.fileName;
-		var imageData			= this.uploadPath + response.fileName;
-		$('#adminImageUploadArea-'+this.inputId).html('<img src="' + imageUrl + '">');
-		$('#'+this.inputId).val(imageData);
+		var imageUrl			= this.uploadPath + fileName;
+		$('#uploadArea-'+this.inputId).html('<img src="' + imageUrl + '">');
+		$('#'+this.inputId).val(fileName);
 	},
 	setupOnBeforeUnload			: function()
 	{
@@ -592,82 +591,7 @@ plfImageField.prototype			= {
 			setTimeout(function()
 			{
 				progress.hide();
-			}, 1500);
+			}, 1000);
 		}
-	}
-};
-
-// Many to many field selector
-function plfMtmField(inputId, adminPath, moduleName)
-{
-	this.inputId				= inputId;
-	this.adminPath				= adminPath;
-	this.moduleName				= moduleName;
-	this.openedWindow			= null;
-
-	var instance				= this;
-	$('#mtmPlusButton-'+this.inputId).click(function()
-	{
-		instance.openSelectMtmFieldList();
-	});
-
-	$('#mtmMinusButton-'+this.inputId).click(function()
-	{
-		instance.removeElementFromList();
-	});
-
-	$('button[type="submit"]').click(function()
-	{
-		instance.selectAllElements();
-	});
-
-	window.addEventListener("message", function(event)
-	{
-		instance.receiveMessage(event);
-	}, false);
-}
-
-plfMtmField.prototype			= {
-	constructor					: plfMtmField,
-	openSelectMtmFieldList		: function()
-	{
-		var selectMtmUrl			= window.location.protocol + '//' + window.location.hostname + this.adminPath + '/custom/mtmField/?moduleName=' + this.moduleName + '&pageNumber=1';
-		this.openedWindow			= window.open(selectMtmUrl, 'selectMtmField', 'width=1024, height=760, left=8, top=8, location=no, menubar=no, status=no, titlebar=no, toolbar=no');
-		this.openedWindow.onload	= function()
-		{
-			var windowScript		= '$(\'.mtmSelectLink\').click(function(){';
-			windowScript			+= 'var messageObject = {pk: $(this).attr(\'data-pk\'), displayName: $(this).attr(\'data-displayName\')};';
-			windowScript			+= 'window.opener.postMessage(JSON.stringify(messageObject), window.location.protocol + \'//\' + window.location.hostname)';
-			windowScript			+= '});';
-			var scriptObject		= document.createElement('script');
-			scriptObject.type		= 'text/javascript';
-			scriptObject.innerHTML	= windowScript;
-			this.document.body.appendChild(scriptObject);
-		}
-	},
-	receiveMessage				: function(event)
-	{
-		var origin				= window.location.protocol + '//' + window.location.hostname;
-		if(event.origin != origin)
-		{
-			return;
-		}
-
-		var data				= JSON.parse(event.data);
-		var newMtmFieldHtml		= '<option value="' + data.pk + '">' + data.displayName + '</option>';
-		$('#'+this.inputId).append(newMtmFieldHtml);
-		this.openedWindow.close();
-	},
-	removeElementFromList		: function()
-	{
-		var values				= $('#'+this.inputId).val();
-		for(var i = 0; i < values.length; i++)
-		{
-			$('#' + this.inputId + ' option[value="' + values[i] + '"]').remove();
-		}
-	},
-	selectAllElements			: function()
-	{
-		$('#' + this.inputId + ' option').attr('selected',true);
 	}
 };
