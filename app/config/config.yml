@@ -43,7 +43,7 @@ twig:
 assetic:
     debug:          "%kernel.debug%"
     use_controller: false
-    bundles:        [ ilkerozcanPortfolioBundle ]
+    bundles:        [ SomeBundle ]
     #read_from:      "%kernel.root_dir%/../web/bundles/ilkerozcanportfolio/assets/"
     write_to:       "%kernel.root_dir%/../src/ilkerozcan/PortfolioBundle/Resources/public/assets/"
     #java: /usr/bin/java
@@ -76,6 +76,8 @@ doctrine:
         #   2. Uncomment database_path in parameters.yml.dist
         #   3. Uncomment next line:
         #     path:     "%database_path%"
+        mapping_types:
+            enum:       string
 
     orm:
         auto_generate_proxy_classes: "%kernel.debug%"
@@ -86,6 +88,9 @@ doctrine:
 swiftmailer:
     transport: "%mailer_transport%"
     host:      "%mailer_host%"
+    port:      "%mailer_port%"
+    encryption: "%mailer_encryption%"
+    auth_mode:  "%mailer_authmode%"
     username:  "%mailer_user%"
     password:  "%mailer_password%"
     spool:     { type: memory }
@@ -93,10 +98,17 @@ swiftmailer:
 fos_user:
     db_driver: orm # other valid values are 'mongodb', 'couchdb' and 'propel'
     firewall_name: main
-    user_class: ilkerozcan\PortfolioBundle\Entity\User
+    user_class: SomeBundle\Entity\User
+    registration:
+        confirmation:
+            enabled: true
+        form:
+            type: some_bundle_registration_type
+    service:
+        mailer: some_bundle.mailer
 
 io_admin:
     admin_prefix: /admin
-    user_class: ilkerozcan\PortfolioBundle\Entity\User
+    user_class: SomeBundle\Entity\User
     admin_menu:
-        - { category: "Site Settings", path: "sitesettings" }
+        #- { category: "Site Settings", path: "sitesettings" }

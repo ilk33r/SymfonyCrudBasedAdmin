@@ -1,0 +1,56 @@
+Ecommerce\StandartBundle\Entity\User:
+    type:  entity
+    table: users
+    id:
+        id:
+            type: integer
+            generator:
+                strategy: AUTO
+    indexes:
+        users_user_type_idx:
+            columns:
+                - user_type_approved
+                - confirmation_token
+    fields:
+        realName:
+            type: string
+            length: 255
+            nullable: false
+        realSurname:
+            type: string
+            length: 255
+            nullable: false
+        gender:
+            type: string
+            columnDefinition: ENUM('Male', 'Female')
+        userTypeApproved:
+            type: smallint
+            nullable: true
+            column: user_type_approved
+            options:
+                default: '0'
+        birthdate:
+            type: date
+        country:
+            type: string
+            length: 120
+        city:
+            type: string
+            length: 120
+        town:
+            type: string
+            length: 120
+        telephoneNumber:
+            type: bigint
+        taxOffice:
+            type: string
+            length: 255
+            nullable: true
+        taxId:
+            type: integer
+            nullable: true
+        registerMailingList:
+            type: boolean
+            nullable: true
+            options:
+                default: '0'

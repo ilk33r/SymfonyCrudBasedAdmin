@@ -1,0 +1,19 @@
+fos_user_registration_register:
+    path: /kayit/
+    defaults: { _controller: FOSUserBundle:Registration:register }
+    methods: [ GET, POST ]
+
+fos_user_registration_check_email:
+    path: /email-kontrol/
+    defaults: { _controller: FOSUserBundle:Registration:checkEmail }
+    methods: [ GET ]
+
+fos_user_registration_confirm:
+    path: /email-onay/{token}/
+    defaults: { _controller: FOSUserBundle:Registration:confirm }
+    methods: [ GET ]
+
+fos_user_registration_confirmed:
+    path: /tamamlandi/
+    defaults: { _controller: FOSUserBundle:Registration:confirmed }
+    methods: [ GET ]

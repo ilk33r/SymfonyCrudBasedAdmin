@@ -1,0 +1,18 @@
+services:
+#    ecommerce_standart.example:
+#        class: Ecommerce\StandartBundle\Example
+#        arguments: [@service_id, "plain_value", %parameter%]
+    ecommerce_standart.form.type:
+        class: SomeBundle\Form\RegistrationFormType
+        tags:
+            - { name: form.type, alias: somebundle_registration_type }
+
+    ecommerce_standart.mailer:
+        class: SomeBundle\Services\SomeMailer
+        arguments:
+            0: "@service_container"
+            1: "@router"
+            2: "@templating"
+            3:
+                confirmation.template: %fos_user.registration.confirmation.template%
+                resetting_password.template: %fos_user.resetting.email.template%

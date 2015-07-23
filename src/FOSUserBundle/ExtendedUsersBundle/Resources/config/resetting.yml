@@ -1,0 +1,19 @@
+fos_user_resetting_request:
+    path: /
+    defaults: { _controller: FOSUserBundle:Resetting:request }
+    methods: [ GET ]
+
+fos_user_resetting_send_email:
+    path: /email-gonder/
+    defaults: { _controller: FOSUserBundle:Resetting:sendEmail }
+    methods: [ POST ]
+
+fos_user_resetting_check_email:
+    path: /email-kontrol/
+    defaults: { _controller: FOSUserBundle:Resetting:checkEmail }
+    methods: [ GET ]
+
+fos_user_resetting_reset:
+    path: /sifre-yenile/{token}/
+    defaults: { _controller: FOSUserBundle:Resetting:reset }
+    methods: [ GET, POST ]

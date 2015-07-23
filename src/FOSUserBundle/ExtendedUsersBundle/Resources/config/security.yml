@@ -1,0 +1,14 @@
+fos_user_security_login:
+    path: /giris/
+    defaults: { _controller: FOSUserBundle:Security:login }
+    methods:  [GET, POST]
+
+fos_user_security_check:
+    path: /login_check/
+    defaults: { _controller: FOSUserBundle:Security:check }
+    methods: [ POST ]
+
+fos_user_security_logout:
+    path: /cikis/
+    defaults: { _controller: FOSUserBundle:Security:logout }
+    methods: [ GET ]

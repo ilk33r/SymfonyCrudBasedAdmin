@@ -1,12 +1,21 @@
 {% trans_default_domain 'FOSUserBundle' %}
 {% block subject %}
 {% autoescape false %}
-{{ 'registration.email.subject'|trans({'%username%': user.username, '%confirmationUrl%': confirmationUrl}) }}
+subject = "{{ siteName ~ ' Üyelik Onayı'|trim('"') }}"
 {% endautoescape %}
 {% endblock %}
+
 {% block body_text %}
 {% autoescape false %}
-{{ 'registration.email.message'|trans({'%username%': user.username, '%confirmationUrl%': confirmationUrl}) }}
+bodyText = "Merhaba {{ user.realName|trim('"') }} {{ user.realSurname|trim('"') }};
+{{ siteName|trim('"') }} üyeliginizi onaylamak için asagıdaki URL'yi kopyalayıp tarayıcınıza yapıstırınız.
+
+{{ confirmationUrl }}"
 {% endautoescape %}
 {% endblock %}
-{% block body_html %}{% endblock %}
+
+{% block body_html %}
+{% autoescape false %}
+bodyHtml = "<p>Merhaba {{ user.realName|trim('"') }} {{ user.realSurname|trim('"') }}</p><br><br><b>{{ siteName|trim('"') }}</b> üyeliginizi onaylamak için <a href=\"{{ confirmationUrl }}\">buraya tıklayınız.</a><br><br>Eger URL'yi göremiyorsanız asagıdaki URL'yi kopyalayıp tarayıcınıza yapıstırınız.<br><br>{{ confirmationUrl }}"
+{% endautoescape %}
+{% endblock %}
