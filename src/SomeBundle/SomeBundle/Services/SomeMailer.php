@@ -6,7 +6,7 @@
  * Time: 12:51
  */
 
-namespace Ecommerce\StandartBundle\Services;
+namespace SomeBundle\SomeBundle\Services;
 
 use FOS\UserBundle\Mailer\MailerInterface;
 use FOS\UserBundle\Model\UserInterface;
@@ -14,7 +14,7 @@ use Symfony\Component\DependencyInjection\Container;
 use Symfony\Component\Routing\RouterInterface;
 use Symfony\Component\Templating\EngineInterface;
 
-class EcommerceMailer implements MailerInterface
+class SomeMailer implements MailerInterface
 {
 	private $container;
 	private $router;

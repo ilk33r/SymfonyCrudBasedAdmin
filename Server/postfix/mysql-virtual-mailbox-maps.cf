@@ -1,6 +1,0 @@
-user = mailer
-password = somepass
-hosts = some_host_name.com
-dbname = servermail
-#query = SELECT 1 FROM virtual_users WHERE email='%s'
-query = SELECT CONCAT(SUBSTRING_INDEX(email,'@',-1),'/',SUBSTRING_INDEX(email,'@',1),'/') FROM virtual_users WHERE email='%s'

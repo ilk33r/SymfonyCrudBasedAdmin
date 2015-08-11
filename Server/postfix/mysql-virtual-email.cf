@@ -1,5 +1,0 @@
-user = mailer
-password = somepass
-hosts = some_host_name.com
-dbname = servermail
-query = SELECT email FROM virtual_users WHERE email='%s'
