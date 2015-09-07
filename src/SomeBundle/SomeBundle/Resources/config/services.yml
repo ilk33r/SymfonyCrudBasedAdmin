@@ -2,12 +2,15 @@ services:
 #    ecommerce_standart.example:
 #        class: Ecommerce\StandartBundle\Example
 #        arguments: [@service_id, "plain_value", %parameter%]
-    ecommerce_standart.form.type:
+    somebundle_standart.form.type:
         class: SomeBundle\Form\RegistrationFormType
         tags:
             - { name: form.type, alias: somebundle_registration_type }
+        arguments:
+            0: "@service_container"
+            1: SomeBundle\Entity\User
 
-    ecommerce_standart.mailer:
+    somebundle_standart.mailer:
         class: SomeBundle\Services\SomeMailer
         arguments:
             0: "@service_container"

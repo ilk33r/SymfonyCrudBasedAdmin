@@ -1,4 +1,4 @@
-Ecommerce\StandartBundle\Entity\User:
+SomeBundle\Entity\User:
     type:  entity
     table: users
     id:

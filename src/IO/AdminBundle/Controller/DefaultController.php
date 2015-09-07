@@ -311,16 +311,18 @@ class DefaultController extends Controller
 
 	public function clear_cacheAction()
 	{
+		$returnVal = $this->redirect($this->generateUrl('io_admin_homepage'));
 		$fs = new Filesystem();
 		try
 		{
+			//		system('rm -rf ' . $this->container->getParameter('kernel.cache_dir') . ' >/dev/null 2>/dev/null &');
 			$fs->remove($this->container->getParameter('kernel.cache_dir'));
 		}catch (InvalidArgumentException $e)
 		{
-			return $this->redirect($this->generateUrl('io_admin_homepage'));
+			return $returnVal;
 		}
 
-		return $this->redirect($this->generateUrl('io_admin_homepage'));
+		return $returnVal;
 	}
 
 	private function createDeleteForm($userName)

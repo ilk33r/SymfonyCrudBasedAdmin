@@ -6,7 +6,7 @@
  * Time: 19:17
  */
 
-namespace Ecommerce\StandartBundle\Entity;
+namespace SomeBundler\Entity;
 
 use FOS\UserBundle\Model\User as BaseUser;
 
