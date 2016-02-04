@@ -6,7 +6,7 @@
  * Time: 19:17
  */
 
-namespace SomeBundler\Entity;
+namespace SomeBundle\Entity;
 
 use FOS\UserBundle\Model\User as BaseUser;
 

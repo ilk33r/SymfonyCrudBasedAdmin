@@ -20,12 +20,12 @@ security:
             pattern: ^/(_(profiler|wdt|error)|css|images|js)/
             security: false
 
-        main:
-            #anonymous: ~
-            pattern: ^/
+        admin:
+            pattern: ^/admin
             form_login:
                 provider: fos_userbundle
                 csrf_provider: security.csrf.token_manager # Use form.csrf_provider instead for Symfony <2.4
+                #csrf_token_generator: security.csrf.token_manager # Use form.csrf_provider instead for Symfony <2.4
                 login_path: /admin/login
                 check_path: /admin/login_check
                 always_use_default_target_path: false
@@ -33,6 +33,22 @@ security:
             logout:
                 path:   /admin/logout
                 target: /admin/login
+            logout:       true
+            anonymous:    true
+
+        main:
+            #anonymous: ~
+            pattern: ^/
+            form_login:
+                provider: fos_userbundle
+                csrf_provider: security.csrf.token_manager # Use form.csrf_provider instead for Symfony <2.4
+                login_path: /login
+                check_path: /login_check
+                always_use_default_target_path: false
+                default_target_path: /
+            logout:
+                path:   /logout
+                target: /login
             logout:       true
             anonymous:    true
 

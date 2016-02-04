@@ -124,6 +124,10 @@ var IO_Helpers					= {
 		}
 
 		return window.location.origin;
+	},
+	isInteger					: function(number) {
+
+		return '' + number === '' + parseInt(number);
 	}
 };
 

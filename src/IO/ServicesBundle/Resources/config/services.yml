@@ -5,3 +5,46 @@ services:
     io_services.file_uploader:
         class: IO\ServicesBundle\Services\AjaxImageUploader
         arguments: ['@kernel']
+        
+    io_services.kernel.exception_service:
+        class: SomeBundle\Services\KernelExceptionListerner
+        arguments:
+            0: "@service_container"
+        tags:
+            - { name: kernel.event_listener, event: kernel.exception, method: onKernelException }
+            
+    io_services.form.type:
+        class: SomeBundle\Form\RegistrationFormType
+        tags:
+            - { name: form.type, alias: scotty_user_registration_type }
+        arguments:
+            0: "@service_container"
+            1: SomeBundle\Entity\User
+
+    io_services.mailer:
+        class: SomeBundle\Services\Mailer
+        arguments:
+            0: "@service_container"
+            1: "@router"
+            2: "@templating"
+            3:
+                confirmation.template: %fos_user.registration.confirmation.template%
+                resetting_password.template: %fos_user.resetting.email.template%
+
+    io_services.user.token_manager:
+        class: SomeBundle\Services\SomeBundleTokenManager
+        #public: true
+        scope: request
+        arguments:
+            0: "@request"
+            1: "@service_container"
+        tags:
+            - {name: kernel.event_listener, event: kernel.request, method: onKernelRequest}
+
+    io_services.twig.twig_extension:
+        class: SomeBundle\DependencyInjection\EncryptionTwigExtension
+        public: false
+        arguments:
+            - "%stringEncryptionKey%"
+        tags:
+            - { name: twig.extension }

@@ -12,7 +12,11 @@ class ProcessHelper
 {
 
 	public static function execInBackground($kernelRoot, $command) {
-		shell_exec('php ' . $kernelRoot . '/console' . ' ' . $command . ' >/dev/null 2>/dev/null &');
+		shell_exec($kernelRoot . '/console' . ' ' . $command . ' >/dev/null 2>/dev/null &');
+	}
+
+	public static function startWithDelay($kernelRoot, $command, $delay) {
+		passthru('sleep ' . $delay . ' && php ' . $kernelRoot . '/console' . ' ' . $command . ' >/dev/null 2>/dev/null &');
 	}
 
 }

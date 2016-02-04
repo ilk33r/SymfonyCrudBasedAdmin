@@ -1,0 +1,1003 @@
+#!/usr/bin/env php
+<?php
+/**
+#!/usr/local/php/php5.6.11/bin/php
+ * Created by PhpStorm.
+ * User: ilk3r
+ * Date: 02/10/15
+ * Time: 12:33
+ */
+
+declare(ticks=1);
+
+set_time_limit(0);
+ob_implicit_flush();
+
+define('USE_SYSLOG', false);
+define('BUFFER_SIZE', 4096);
+
+/**
+ * Class MemCacheGlobals
+ */
+class MemCacheGlobals {
+
+	/**
+	 * @var bool
+	 */
+	public static $quit = false;
+
+	/**
+	 * @var int
+	 */
+	public static $maxConnection = 6666;
+
+
+	/**
+	 * @var int
+	 */
+	public static  $maxMemorySize = 90000000000;
+}
+
+/**
+ * Class MemCacheDataContent
+ */
+class MemCacheDataContent {
+
+	/**
+	 * @var string
+	 */
+	public $id;
+	/**
+	 * @var string
+	 */
+	public $data;
+	/**
+	 * @var int
+	 */
+	public $lifeTime;
+	/**
+	 * @var int
+	 */
+	public $setTime;
+	/**
+	 * @var int
+	 */
+	public $dataSize;
+}
+
+/**
+ * Class MemCacheData
+ */
+class MemCacheData {
+
+	/**
+	 * @var MemCacheDataContent[]
+	 */
+	protected $dataArray;
+
+	/**
+	 * @var int
+	 */
+	private $currentMemorySize;
+
+	/**
+	 *
+	 */
+	public function __construct() {
+
+		$this->dataArray = array();
+		$this->currentMemorySize = 0;
+	}
+
+	/**
+	 * @param $id
+	 * @return bool|MemCacheDataContent
+	 */
+	public function doFetch($id) {
+
+		for($i = 0, $ilen = count($this->dataArray); $i < $ilen; $i++) {
+
+			if($this->dataArray[$i]->id == $id) {
+				return $this->dataArray[$i]->data;
+			}
+		}
+
+		return false;
+	}
+
+	/**
+	 * @param $id
+	 * @return bool
+	 */
+	public function doContains($id) {
+
+		for($i = 0, $ilen = count($this->dataArray); $i < $ilen; $i++) {
+
+			if($this->dataArray[$i]->id == $id) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	/**
+	 * @param $id
+	 * @param $data
+	 * @param int $lifeTime
+	 */
+	public function doSave($id, $data, $lifeTime = 0) {
+
+		$dataSize = strlen($data);
+		$sumOfDataSize = $this->currentMemorySize + $dataSize;
+		if($sumOfDataSize > MemCacheGlobals::$maxMemorySize) {
+			return false;
+		}else{
+			$this->currentMemorySize += $dataSize;
+			$memcacheData = new MemCacheDataContent();
+			$memcacheData->id = $id;
+			$memcacheData->data = $data;
+			$memcacheData->dataSize = $dataSize;
+			$memcacheData->lifeTime = $lifeTime;
+			$memcacheData->setTime = time();
+
+			for($i = 0, $ilen = count($this->dataArray); $i < $ilen; $i++) {
+
+				if($this->dataArray[$i]->id == $id) {
+					unset($this->dataArray[$i]);
+				}
+			}
+
+			$this->dataArray[] = $memcacheData;
+			return true;
+		}
+	}
+
+	/**
+	 * @param $id
+	 * @return bool
+	 */
+	public function doDelete($id) {
+
+		for($i = 0, $ilen = count($this->dataArray); $i < $ilen; $i++) {
+
+			if($this->dataArray[$i]->id == $id) {
+				$this->currentMemorySize -= $this->dataArray[$i]->dataSize;
+				unset($this->dataArray[$i]);
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/**
+	 *
+	 */
+	public function doFlush() {
+		$this->currentMemorySize = 0;
+
+		for($i = 0, $ilen = count($this->dataArray); $i < $ilen; $i++) {
+
+			unset($this->dataArray[$i]);
+		}
+
+		unset($this->dataArray);
+		$this->dataArray = array();
+	}
+
+	/**
+	 * @return int
+	 */
+	public function doGetStats() {
+
+		return $this->currentMemorySize;
+	}
+
+	/**
+	 * @param $currentTime int
+	 */
+	public function deleteEOLCaches($currentTime) {
+
+		for($i = 0, $ilen = count($this->dataArray); $i < $ilen; $i++) {
+
+			if(($this->dataArray[$i]->lifeTime > 0)) {
+				$cacheEndTime = $this->dataArray[$i]->setTime + $this->dataArray[$i]->lifeTime;
+				if($cacheEndTime < $currentTime) {
+					unset($this->dataArray[$i]);
+				}
+			}
+		}
+	}
+}
+
+/**
+ * @param $signalNum
+ */
+function signalHandler($signalNum) {
+
+	if(USE_SYSLOG)
+		syslog(LOG_ERR, "Signal received! $signalNum \n");
+
+	if($signalNum == SIGINT) {
+		MemCacheGlobals::$quit = true;
+	}
+
+	if($signalNum == SIGTERM) {
+		MemCacheGlobals::$quit = true;
+	}
+
+}
+
+pcntl_signal(SIGINT, 'signalHandler');
+pcntl_signal(SIGTERM, 'signalHandler');
+
+/**
+ * Class Commands
+ */
+class Commands {
+
+	/**
+	 * @var string
+	 */
+	protected $lineEnding;
+	/**
+	 * @var string
+	 */
+	protected $serverHi;
+	/**
+	 * @var string
+	 */
+	protected $clientHi;
+	/**
+	 * @var string
+	 */
+	protected $serverOk;
+	/**
+	 * @var string
+	 */
+	protected $serverFail;
+	/**
+	 * @var array
+	 */
+	protected $clientCommands;
+
+
+	/**
+	 * @param string $lineEnding
+	 */
+	public function __construct($lineEnding) {
+
+		$this->lineEnding = $lineEnding;
+
+		$this->serverHi = 'WILLKOMMEN' . $this->lineEnding;
+		$this->clientHi = 'HALLO' . $this->lineEnding;
+		$this->serverOk = 'OK' . $this->lineEnding;
+		$this->serverFail = 'FAIL' . $this->lineEnding;
+
+		$this->clientCommands = array(
+			'fetch' => ['parse'=>'#^FETCH (.*?)([' . $this->lineEnding . ']+)#s', 'method'=>'doFetch'],
+			'contains' => ['parse'=>'#^CONTAINS (.*?)([' . $this->lineEnding . ']+)#s', 'method'=>'doContains'],
+			'data' => ['parse'=>'#^DATA (.*?)([' . $this->lineEnding . ']+)#s', 'method'=>'internal'],
+			'lifeTime' => ['parse'=>'#^LIFETIME ([\d]+)([' . $this->lineEnding . ']+)$#', 'method'=>'internal'],
+			'save' => ['parse'=>'#^SAVE (.*?)([' . $this->lineEnding . ']+)#s', 'method'=>'internal'],
+			'delete' => ['parse'=>'#^DELETE (.*?)([' . $this->lineEnding . ']+)#s', 'method'=>'doDelete'],
+			'flush' => ['parse'=>'#^FLUSH([' . $this->lineEnding . ']+)$#', 'method'=>'doFlush'],
+			'getStats' => ['parse'=>'#^GETSTATS([' . $this->lineEnding . ']+)$#', 'method'=>'doGetStats'],
+			'closeConnection' => ['parse'=>'#^CLOSE([' . $this->lineEnding . ']+)#', 'method'=>'internal'],
+		);
+	}
+
+	/**
+	 * @param $command
+	 * @return array|bool
+	 */
+	public function parseClientCommand($command) {
+
+		$returnValue = false;
+
+		foreach($this->clientCommands as $knowedCommand => $knowedCommandData) {
+
+			if(preg_match($knowedCommandData['parse'], $command, $matches)) {
+				$returnValue = array(
+					'command' => $knowedCommand,
+					'value' => ( (count($matches) >= 2) ? $matches[1] : false ),
+					'method' => $knowedCommandData['method']
+				);
+
+				break;
+			}
+		}
+
+		if(USE_SYSLOG && is_array($returnValue))
+			syslog(LOG_ERR, 'Command: ' . $returnValue['command'] . ' value: ' . $returnValue['value'] . $this->lineEnding);
+
+		return $returnValue;
+	}
+
+	/**
+	 * @return string
+	 */
+	public function getLineEnding()
+	{
+		return $this->lineEnding;
+	}
+
+	/**
+	 * @return string
+	 */
+	public function getServerHi()
+	{
+		return $this->serverHi;
+	}
+
+	/**
+	 * @return string
+	 */
+	public function getClientHi()
+	{
+		return $this->clientHi;
+	}
+
+	/**
+	 * @return string
+	 */
+	public function getServerOk()
+	{
+		return $this->serverOk;
+	}
+
+	/**
+	 * @return string
+	 */
+	public function getServerFail()
+	{
+		return $this->serverFail;
+	}
+
+	/**
+	 * @return array
+	 */
+	public function getClientCommands()
+	{
+		return $this->clientCommands;
+	}
+}
+
+/**
+ * Class MemCacheServer
+ */
+class MemCacheServer {
+
+	/**
+	 *
+	 */
+	const RESPONSE_CODE_OK = 200;
+	/**
+	 *
+	 */
+	const RESPONSE_CODE_STATUS_DEAD = 102;
+	/**
+	 *
+	 */
+	const RESPONSE_CODE_STATUS_PID_NOT_WRITABLE = 301;
+	/**
+	 *
+	 */
+	const RESPONSE_CODE_STATUS_PID_EXISTS= 302;
+	/**
+	 *
+	 */
+	const RESPONSE_CODE_STATUS_PID_NOT_EXISTS= 303;
+	/**
+	 *
+	 */
+	const RESPONSE_CODE_STATUS_FORK_ERROR= 304;
+	/**
+	 *
+	 */
+	const RESPONSE_CODE_STATUS_SOCKET_FILE_NOT_WRITABLE = 500;
+	/**
+	 *
+	 */
+	const RESPONSE_CODE_SOCKET_IS_NOT_CREATE = 501;
+	/**
+	 *
+	 */
+	const RESPONSE_CODE_SOCKET_ACCEPT_FAILED = 502;
+
+	/**
+	 * @var ArgumentParser
+	 */
+	private $arguments;
+	/**
+	 * @var Resource
+	 */
+	private $socket;
+	/**
+	 * @var array
+	 */
+	private $clientSockets;
+	/**
+	 * @var stdClass[]
+	 */
+	private $clients;
+	/**
+	 * @var int
+	 */
+	private $startTime;
+	/**
+	 * @var MemCacheData
+	 */
+	private $memCacheData;
+	/**
+	 * @var Commands
+	 */
+	private $memcacheCommands;
+	/**
+	 * @var string
+	 */
+	private $dataClass;
+
+	/**
+	 * @param ArgumentParser $parsedArguments
+	 * @param Commands $commands
+	 * @param string $dataClass
+	 */
+	function __construct(ArgumentParser $parsedArguments, $commands, $dataClass) {
+
+		$this->arguments = $parsedArguments;
+		$this->memcacheCommands = $commands;
+		$this->dataClass = $dataClass;
+
+		switch($parsedArguments->getSignal()) {
+			case 'start':
+				$this->startServer();
+				break;
+			case 'stop':
+				$pid = file_get_contents($this->arguments->getPidFile());
+				if(posix_kill($pid, SIGINT)) {
+					echo self::RESPONSE_CODE_OK . $this->memcacheCommands->getLineEnding();
+				}else{
+					echo self::RESPONSE_CODE_STATUS_DEAD . $this->memcacheCommands->getLineEnding();
+				}
+				MemCacheGlobals::$quit = true;
+				break;
+			case 'status':
+				$this->checkStatus();
+				break;
+		}
+	}
+
+	/**
+	 *
+	 */
+	private function startServer() {
+
+		$pidFile = $this->arguments->getPidFile();
+
+		if(is_null($pidFile)) {
+			echo self::RESPONSE_CODE_STATUS_PID_NOT_WRITABLE . $this->memcacheCommands->getLineEnding();
+			return;
+		}
+
+		if(file_exists($pidFile)) {
+			echo self::RESPONSE_CODE_STATUS_PID_EXISTS . $this->memcacheCommands->getLineEnding();
+			return;
+		}
+
+		if(file_exists($this->arguments->getUnixSocket())) {
+			unlink($this->arguments->getUnixSocket());
+		}
+
+		$pidDirectory = explode('/', $pidFile);
+		$lastIdx = count($pidDirectory) - 1;
+		unset($pidDirectory[$lastIdx]);
+		$pidDirectoryString = join('/', $pidDirectory);
+		if(!is_writable($pidDirectoryString)) {
+			echo self::RESPONSE_CODE_STATUS_PID_NOT_WRITABLE . $this->memcacheCommands->getLineEnding();
+			return;
+		}
+
+		if(is_null($this->arguments->getUnixSocket())) {
+			echo self::RESPONSE_CODE_STATUS_SOCKET_FILE_NOT_WRITABLE . $this->memcacheCommands->getLineEnding();
+			return;
+		}
+
+		if($this->arguments->isNoFork()) {
+
+			$this->clients = array();
+			$this->clientSockets = array();
+			$className = $this->dataClass;
+			$this->memCacheData = new $className();
+			unset($className);
+			unset($this->dataClass);
+			$this->listenSocket();
+		}else{
+
+			//
+			$pid = pcntl_fork();
+			if ($pid == -1) {
+				echo self::RESPONSE_CODE_STATUS_FORK_ERROR . $this->memcacheCommands->getLineEnding();
+			} else if ($pid) {
+				// we are the parent
+				$pidFileHandler = fopen($pidFile, 'w');
+				fwrite($pidFileHandler, $pid);
+				fclose($pidFileHandler);
+				$oldMask = umask(0);
+				chmod($pidFile, 0666);
+				umask($oldMask);
+				echo self::RESPONSE_CODE_OK . $this->memcacheCommands->getLineEnding();
+			} else {
+				// we are the child
+
+				usleep(200000);
+				$this->setSid();
+				$this->clients = array();
+				$this->clientSockets = array();
+				$className = $this->dataClass;
+				$this->memCacheData = new $className();
+				unset($className);
+				unset($this->dataClass);
+				$this->listenSocket();
+			}
+		}
+	}
+
+	/**
+	 *
+	 */
+	private function setSid() {
+
+		if (posix_setsid() === -1) {
+			exit(1);
+		}
+
+		fclose(STDIN);
+		fclose(STDOUT);
+		fclose(STDERR);
+	}
+
+	/**
+	 *
+	 */
+	private function checkStatus() {
+
+		$pidFile = $this->arguments->getPidFile();
+
+		if(!file_exists($pidFile)) {
+			echo self::RESPONSE_CODE_STATUS_PID_NOT_EXISTS . $this->memcacheCommands->getLineEnding();
+			return;
+		}
+
+		$pid = file_get_contents($pidFile);
+
+		if(posix_kill($pid, 0)) {
+			echo self::RESPONSE_CODE_OK . $this->memcacheCommands->getLineEnding();
+		}else{
+			unlink($pidFile);
+			unlink($this->arguments->getUnixSocket());
+			echo self::RESPONSE_CODE_STATUS_DEAD . $this->memcacheCommands->getLineEnding();
+		}
+
+	}
+
+	/**
+	 *
+	 */
+	private function listenSocket() {
+
+		$this->createSocket();
+		$this->startTime = time();
+
+		while(!MemCacheGlobals::$quit) {
+
+			pcntl_signal_dispatch();
+
+			if(!$this->socket) {
+
+				if(USE_SYSLOG)
+					syslog(LOG_ERR, "Socket empty! \n");
+
+				break;
+			}
+
+			$this->deleteEOLCaches();
+
+			$read		= array();
+			$read[]		= $this->socket;
+			$read		= array_merge($read, $this->clientSockets);
+
+			if(@socket_select($read, $write, $except, $tv_sec = 5) < 1) {
+				sleep(1);
+				continue;
+			}
+
+			if(in_array($this->socket, $read))  {
+
+				if(($msgsock = socket_accept($this->socket)) === FALSE) {
+					echo self::RESPONSE_CODE_SOCKET_ACCEPT_FAILED . $this->memcacheCommands->getLineEnding();
+					echo socket_strerror(socket_last_error($this->socket)) . $this->memcacheCommands->getLineEnding();
+
+					if(USE_SYSLOG)
+						syslog(LOG_ERR, "Accept failed! \n");
+
+					break;
+				}
+
+				$this->clientSockets[] = $msgsock;
+				end($this->clientSockets);
+				$clientData = new stdClass();
+				$clientData->socket = key($this->clientSockets);
+				$clientData->connTime = time();
+				$clientData->isClientSayHi = false;
+				$clientData->data = '';
+				$clientData->lifeTime = 0;
+				$clientData->failureCommandCount = 0;
+				reset($this->clientSockets);
+				$this->clients[] = $clientData;
+				@socket_write($msgsock, $this->memcacheCommands->getServerHi(), strlen($this->memcacheCommands->getServerHi()));
+			}
+
+			foreach ($this->clients as $clientId => $client) {
+
+				$clientSocketId = $client->socket;
+				$clientSocket = $this->clientSockets[$clientSocketId];
+
+				if (in_array($clientSocket, $read)) {
+
+					@socket_set_nonblock($clientSocket);
+
+					if(($buf = @socket_read($clientSocket, BUFFER_SIZE, PHP_BINARY_READ)) === FALSE){
+						$this->closeClientConnection($clientId);
+						continue;
+					}
+
+					/* connection timeout */
+					if(time() - (MemCacheGlobals::$maxConnection * 2) > $client->connTime) {
+						$this->closeClientConnection($clientId);
+						continue;
+					}
+
+					if(!$buf || strlen($buf) == 0) {
+						continue;
+					}
+
+					if($this->arguments->isNoFork())
+						echo 'Buffer ' . $buf;
+
+
+					if(!$client->isClientSayHi) {
+
+						if($buf == ($this->memcacheCommands->getClientHi())) {
+
+							$client->isClientSayHi = true;
+							@socket_write($clientSocket, $this->memcacheCommands->getServerOk(), strlen($this->memcacheCommands->getServerOk()));
+							continue;
+						}
+					}else{
+						$clientCommand = $this->memcacheCommands->parseClientCommand($buf);
+
+						if(!$clientCommand) {
+							$client->failureCommandCount += 1;
+							@socket_write($clientSocket, $this->memcacheCommands->getServerFail(), strlen($this->memcacheCommands->getServerFail()));
+
+							if($client->failureCommandCount > 3) {
+								$this->closeClientConnection($clientId);
+								continue;
+							}
+						}else{
+							$this->parseClientCommand($clientCommand, $clientId);
+						}
+					}
+
+				}
+			}
+
+			usleep(2000);
+		}
+
+		$this->stopServer();
+	}
+
+	/**
+	 *
+	 */
+	private function stopServer() {
+
+		if($this->socket) {
+			@socket_close($this->socket);
+		}
+
+		unlink($this->arguments->getPidFile());
+		unlink($this->arguments->getUnixSocket());
+	}
+
+	/**
+	 *
+	 */
+	private function createSocket() {
+
+		if(($this->socket = socket_create(AF_UNIX, SOCK_STREAM, 0)) === FALSE)  {
+			echo self::RESPONSE_CODE_SOCKET_IS_NOT_CREATE . $this->memcacheCommands->getLineEnding();
+			echo socket_strerror(socket_last_error()) . $this->memcacheCommands->getLineEnding();
+			MemCacheGlobals::$quit = true;
+			return;
+		}
+
+		$oldUmask = umask(0);
+		umask(0000);
+		if(socket_bind($this->socket, $this->arguments->getUnixSocket()) === FALSE)  {
+			echo self::RESPONSE_CODE_SOCKET_IS_NOT_CREATE . $this->memcacheCommands->getLineEnding();
+			echo socket_strerror(socket_last_error($this->socket)) . $this->memcacheCommands->getLineEnding();
+			MemCacheGlobals::$quit = true;
+			return;
+		}
+		umask($oldUmask);
+
+		if(socket_listen($this->socket, MemCacheGlobals::$maxConnection) === FALSE) {
+			echo self::RESPONSE_CODE_SOCKET_IS_NOT_CREATE . $this->memcacheCommands->getLineEnding();
+			echo socket_strerror(socket_last_error($this->socket)) . $this->memcacheCommands->getLineEnding();
+			MemCacheGlobals::$quit = true;
+			return;
+		}
+
+		socket_set_nonblock($this->socket);
+	}
+
+	/**
+	 * @param int $clientId
+	 */
+	private function closeClientConnection($clientId) {
+
+		if(USE_SYSLOG)
+			syslog(LOG_ERR, "Connection will closing... \n");
+
+		if(!isset($this->clients[$clientId])) {
+			return;
+		}
+
+		if(USE_SYSLOG)
+			syslog(LOG_ERR, "Client exists ... \n");
+
+		$cliendData = $this->clients[$clientId];
+		$clientSocketId = $cliendData->socket;
+
+		if(!isset($this->clientSockets[$clientSocketId])) {
+			return;
+		}
+
+		if(USE_SYSLOG)
+			syslog(LOG_ERR, "Client socket exists ... \n");
+
+		$clientSocket = $this->clientSockets[$clientSocketId];
+
+		if($clientSocket) {
+
+			if(USE_SYSLOG)
+				syslog(LOG_ERR, "Isset ... \n");
+
+			@socket_close($clientSocket);
+		}
+
+		if(USE_SYSLOG)
+			syslog(LOG_ERR, "Unsetting sockket data \n");
+
+		unset($this->clients[$clientId]);
+		unset($this->clientSockets[$clientSocketId]);
+
+		if(count($this->clients) == 0) {
+			if(USE_SYSLOG)
+				syslog(LOG_ERR, "Resetting clients array \n");
+			$this->clients = array();
+		}
+	}
+
+	/**
+	 * @param string $clientCommand
+	 * @param int $clientId
+	 */
+	private function parseClientCommand($clientCommand, $clientId) {
+
+		$cliendData = $this->clients[$clientId];
+		$clientSocketId = $cliendData->socket;
+		$clientSocket = $this->clientSockets[$clientSocketId];
+
+		if(!$clientCommand) {
+
+			@socket_write($clientSocket, $this->memcacheCommands->getServerFail(), strlen($this->memcacheCommands->getServerFail()));
+		}else{
+
+			$methodName = $clientCommand['method'];
+			if($methodName != 'internal') {
+
+				$data = $this->memCacheData->$methodName($clientCommand['value']);
+				if(is_bool($data)) {
+					$response = ($data) ? $this->memcacheCommands->getServerOk() : $this->memcacheCommands->getServerFail();
+				}else{
+					$response = $data . $this->memcacheCommands->getLineEnding();
+				}
+
+				@socket_write($clientSocket, $response, strlen($response));
+			}else{
+				switch($clientCommand['command']) {
+					case 'data':
+						$this->clients[$clientId]->data = $clientCommand['value'];
+						@socket_write($clientSocket, $this->memcacheCommands->getServerOk(), strlen($this->memcacheCommands->getServerOk()));
+						$this->clients[$clientId]->connTime = time();
+						break;
+					case 'lifeTime':
+						$this->clients[$clientId]->lifeTime = (int)$clientCommand['value'];
+						@socket_write($clientSocket, $this->memcacheCommands->getServerOk(), strlen($this->memcacheCommands->getServerOk()));
+						$this->clients[$clientId]->connTime = time();
+						break;
+					case 'save':
+						$saveStatus = $this->memCacheData->doSave($clientCommand['value'], $this->clients[$clientId]->data, $this->clients[$clientId]->lifeTime);
+						$response = ($saveStatus) ? $this->memcacheCommands->getServerOk() : $this->memcacheCommands->getServerFail();
+						@socket_write($clientSocket, $response, strlen($response));
+						$this->clients[$clientId]->connTime = time();
+						break;
+					case 'closeConnection':
+
+						if(USE_SYSLOG)
+							syslog(LOG_ERR, "Close connection \n");
+
+						$this->closeClientConnection($clientId);
+						break;
+				}
+			}
+		}
+
+		$this->clients[$clientId]->connTime = time();
+	}
+
+	/**
+	 *
+	 */
+	private function deleteEOLCaches() {
+
+		$this->memCacheData->deleteEOLCaches(time());
+	}
+
+}
+
+/**
+ * Class ArgumentParser
+ */
+class ArgumentParser {
+
+	/**
+	 * @var string
+	 */
+	private $signal;
+	/**
+	 * @var string
+	 */
+	private $pidFile;
+	/**
+	 * @var string
+	 */
+	private $unixSocket;
+	/**
+	 * @var bool
+	 */
+	private $status;
+	/**
+	 * @var bool
+	 */
+	private $noFork;
+
+	/**
+	 * @param int $argc
+	 * @param string $argv
+	 */
+	public function __construct($argc, $argv) {
+
+		$this->noFork = false;
+		$this->status = true;
+		if($argc < 2) {
+			$this->status = false;
+			return;
+		}
+
+		$this->signal = $argv[1];
+		if(($this->signal != 'start') && ($this->signal != 'stop') && ($this->signal != 'status')) {
+			$this->status = false;
+			return;
+		}
+
+		for($i = 2; $i < $argc; $i++) {
+
+			switch($argv[$i]) {
+				case '-p':
+					$i++;
+					if($i < $argc) {
+						$this->pidFile = $argv[$i];
+					}else{
+						$this->status = false;
+						break;
+					}
+					break;
+				case '-s':
+					$i++;
+					if($i < $argc) {
+						$this->unixSocket = $argv[$i];
+					}else{
+						$this->status = false;
+						break;
+					}
+					break;
+				case '-nofork':
+					$this->noFork = true;
+					break;
+			}
+		}
+
+	}
+
+	/**
+	 * @return boolean
+	 */
+	public function isStatus()
+	{
+		return $this->status;
+	}
+
+	/**
+	 * @return string
+	 */
+	public function getUsage() {
+
+		return "Usage app/memcache [start|stop|status] -p [pid file] -s [unix socket path] -nofork \r\n-p always required";
+	}
+
+	/**
+	 * @return string
+	 */
+	public function getSignal()
+	{
+		return $this->signal;
+	}
+
+	/**
+	 * @return string
+	 */
+	public function getPidFile()
+	{
+		return $this->pidFile;
+	}
+
+	/**
+	 * @return string
+	 */
+	public function getUnixSocket()
+	{
+		return $this->unixSocket;
+	}
+
+	/**
+	 * @return boolean
+	 */
+	public function isNoFork()
+	{
+		return $this->noFork;
+	}
+
+	/**
+	 * @param boolean $noFork
+	 */
+	public function setNoFork($noFork)
+	{
+		$this->noFork = $noFork;
+	}
+
+}
+
+$argumets = new ArgumentParser($argc, $argv);
+if($argumets->isStatus()) {
+
+	$memcacheCommands = new Commands("\r\n");
+	new MemCacheServer($argumets, $memcacheCommands, 'MemCacheData');
+} else {
+
+	echo $argumets->getUsage() . "\r\n";
+}

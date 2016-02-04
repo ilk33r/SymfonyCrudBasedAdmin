@@ -3,11 +3,12 @@
 namespace IO\AdminBundle\Controller;
 
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Kernel;
 use Symfony\Component\Form\FormError;
-use Symfony\Component\Filesystem\Filesystem;
-use Symfony\Component\Filesystem\Exception;
+//use Symfony\Component\Filesystem\Filesystem;
+//use Symfony\Component\Filesystem\Exception;
 use Symfony\Component\Process\Exception\InvalidArgumentException;
 
 
@@ -312,16 +313,20 @@ class DefaultController extends Controller
 	public function clear_cacheAction()
 	{
 		$returnVal = $this->redirect($this->generateUrl('io_admin_homepage'));
+		$command = 'rm -rf ' . $this->container->getParameter('kernel.cache_dir') . '/* >/dev/null 2>/dev/null &';
+		system($command);
+		/*
 		$fs = new Filesystem();
 		try
 		{
-			//		system('rm -rf ' . $this->container->getParameter('kernel.cache_dir') . ' >/dev/null 2>/dev/null &');
 			$fs->remove($this->container->getParameter('kernel.cache_dir'));
 		}catch (InvalidArgumentException $e)
 		{
 			return $returnVal;
-		}
+		}*/
 
+		;
+		//return new Response($command, 200);
 		return $returnVal;
 	}
 
