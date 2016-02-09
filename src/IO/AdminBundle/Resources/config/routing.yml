@@ -38,3 +38,15 @@ io_admin_delete_user:
     path: /users/{userName}/delete
     defaults: { _controller: IOAdminBundle:Default:delete_user }
     methods:  [POST, DELETE]
+
+io_admin_start_memcache_server:
+    path: /start-memcache-server
+    defaults: { _controller: IOAdminBundle:Default:startMemcacheServer }
+
+io_admin_stop_memcache_server:
+    path: /stop-memcache-server
+    defaults: { _controller: IOAdminBundle:Default:stopMemcacheServer }
+
+io_admin_clear_mem_cache:
+    path: /mem-cache-clear
+    defaults: { _controller: IOAdminBundle:Default:clear_mem_cache }

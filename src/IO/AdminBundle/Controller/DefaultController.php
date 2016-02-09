@@ -15,6 +15,7 @@ use Symfony\Component\Process\Exception\InvalidArgumentException;
 use Doctrine\ORM\Tools\Pagination\Paginator;
 use Doctrine\DBAL\DBALException;
 use IO\AdminBundle\Form\UsersType;
+use IO\ServicesBundle\Helpers\MemcacheServerHelper;
 
 class DefaultController extends Controller
 {
@@ -55,6 +56,20 @@ class DefaultController extends Controller
 			$cacheBtnClass = 'btn-success';
 		}
 
+		$rootDir = $this->container->getParameter('kernel.root_dir');
+		$memCachePidFile = $this->container->getParameter('memCachePidPath');
+		$memcacheServerStatus = MemcacheServerHelper::GetServerStatus($rootDir, $memCachePidFile);
+		$stats = 0;
+		if($memcacheServerStatus == 200) {
+
+			$memcacheSocket = $this->container->getParameter('memcachesocketpath');
+			$memcacheConn = MemcacheServerHelper::ConnectMemcacheServer($memcacheSocket);
+			if($memcacheConn) {
+				$stats = MemcacheServerHelper::GetStats($memcacheConn);
+				MemcacheServerHelper::CloseConnection($memcacheConn);
+			}
+		}
+
 		$templateParams = array(
 			'symfonyVersion' => Kernel::VERSION,
 			'symfonyEOL' => Kernel::END_OF_LIFE,
@@ -73,7 +88,9 @@ class DefaultController extends Controller
 			'biggestTable' => $biggestTable,
 			'biggestTableSize' => $currentRowCount . ' Records',
 			'cacheButtonClass' => $cacheBtnClass,
-			'cacheSize' =>  $filesizeMB . ' MB'
+			'cacheSize' =>  $filesizeMB . ' MB',
+			'memCacheServerStatus' => $memcacheServerStatus,
+			'memCacheSize' =>  $stats . ' MB'
 		);
 
         return $this->render('IOAdminBundle:Default:index.html.twig', $templateParams);
@@ -361,5 +378,55 @@ class DefaultController extends Controller
 		$form->add('submit', 'submit', array('label' => 'Save'));
 
 		return $form;
+	}
+
+	public function startMemcacheServerAction() {
+
+		$rootDir = $this->container->getParameter('kernel.root_dir');
+		$pidFile = $this->container->getParameter('memCachePidPath');
+		$socket = $this->container->getParameter('memCacheSocketPath');
+
+		$logger = $this->get('logger');
+		$logger->info('Memcache will start ' . $rootDir . ' ' . $pidFile . ' ' . $socket);
+
+		MemcacheServerHelper::StartServer($rootDir, $pidFile, $socket);
+
+		$returnVal = $this->redirect($this->generateUrl('io_admin_homepage'));
+		usleep(500000);
+
+		return $returnVal;
+	}
+
+	public function stopMemcacheServerAction() {
+
+		$logger = $this->get('logger');
+		$logger->info('Memcache will stop');
+
+		$rootDir = $this->container->getParameter('kernel.root_dir');
+		$pidFile = $this->container->getParameter('memCachePidPath');
+
+		MemcacheServerHelper::StopServer($rootDir, $pidFile);
+
+		$returnVal = $this->redirect($this->generateUrl('io_admin_homepage'));
+		usleep(500000);
+
+		return $returnVal;
+	}
+
+	public function clear_mem_cacheAction() {
+
+		$logger = $this->get('logger');
+		$logger->info('Memcache cleared');
+
+		$memcacheSocket = $this->container->getParameter('memcachesocketpath');
+		$memcacheConn = MemcacheServerHelper::ConnectMemcacheServer($memcacheSocket);
+		if($memcacheConn) {
+			MemcacheServerHelper::FlushData($memcacheSocket);
+			MemcacheServerHelper::CloseConnection($memcacheConn);
+		}
+
+		$returnVal = $this->redirect($this->generateUrl('io_admin_homepage'));
+		usleep(500000);
+		return $returnVal;
 	}
 }

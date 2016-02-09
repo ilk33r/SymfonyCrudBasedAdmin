@@ -68,6 +68,27 @@
 				<td>{{ cacheSize }}</td>
 				<td colspan="2" rowspan="1"><a href="{{ path('io_admin_clear_cache') }}" class="btn {{ cacheButtonClass }}">Clear Cache</a></td>
 			</tr>
+
+			<tr>
+				<td colspan="2" rowspan="1"><strong>Memory Caching Server:</strong></td>
+				<td colspan="2" rowspan="1">
+					{% if memCacheServerStatus == 303 %}
+						<a href="{{ path('io_admin_start_memcache_server') }}" class="btn btn-danger">Stopped</a>
+					{% elseif memCacheServerStatus == 200 %}
+						<a href="{{ path('io_admin_stop_memcache_server') }}" class="btn btn-success">UP and running</a>
+					{% elseif memCacheServerStatus == 102 %}
+						<a href="{{ path('io_admin_stop_memcache_server') }}" class="btn btn-danger">Server is ZOMBIE</a>
+					{% else %}
+						<a href="{{ path('io_admin_start_memcache_server') }}" class="btn btn-danger">Stopped</a>
+					{% endif %}
+				</td>
+			</tr>
+
+			<tr>
+				<td><strong>Memory Caching:</strong></td>
+				<td>{{ memCacheSize }}</td>
+				<td colspan="2" rowspan="1"><a href="{{ path('io_admin_clear_mem_cache') }}" class="btn {{ cacheButtonClass }}">Clear All Data</a></td>
+			</tr>
 		</tbody>
 	</table>
 
