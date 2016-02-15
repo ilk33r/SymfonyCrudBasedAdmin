@@ -6,7 +6,7 @@
  * Time: 14:40
  */
 
-namespace SomeBundle\UserOnline;
+namespace IO\ServicesBundle\Helpers;
 
 define('LINE_ENDING', "\r\n");
 
@@ -104,7 +104,7 @@ class MemcacheServerHelper {
 	public static function ConnectMemcacheServer($socketPath, $timeout = 2) {
 
 		try {
-			$memcacheServer = stream_socket_client('unix://' . $socketPath, $errno, $errstr, $timeout);
+			$memcacheServer = @stream_socket_client('unix://' . $socketPath, $errno, $errstr, $timeout);
 		}catch (ContextErrorException $e) {
 			return false;
 		}

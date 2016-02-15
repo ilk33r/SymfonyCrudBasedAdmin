@@ -95,10 +95,10 @@ class MemCacheData {
 	 */
 	public function doFetch($id) {
 
-		for($i = 0, $ilen = count($this->dataArray); $i < $ilen; $i++) {
+		foreach($this->dataArray as $ak => $av) {
 
-			if($this->dataArray[$i]->id == $id) {
-				return $this->dataArray[$i]->data;
+			if($av->id == $id) {
+				return $av->data;
 			}
 		}
 
@@ -111,9 +111,9 @@ class MemCacheData {
 	 */
 	public function doContains($id) {
 
-		for($i = 0, $ilen = count($this->dataArray); $i < $ilen; $i++) {
+		foreach($this->dataArray as $ak => $av) {
 
-			if($this->dataArray[$i]->id == $id) {
+			if($av->id == $id) {
 				return true;
 			}
 		}
@@ -141,10 +141,10 @@ class MemCacheData {
 			$memcacheData->lifeTime = $lifeTime;
 			$memcacheData->setTime = time();
 
-			for($i = 0, $ilen = count($this->dataArray); $i < $ilen; $i++) {
+			foreach($this->dataArray as $ak => $av) {
 
-				if($this->dataArray[$i]->id == $id) {
-					unset($this->dataArray[$i]);
+				if($av->id == $id) {
+					unset($this->dataArray[$ak]);
 				}
 			}
 
@@ -159,11 +159,11 @@ class MemCacheData {
 	 */
 	public function doDelete($id) {
 
-		for($i = 0, $ilen = count($this->dataArray); $i < $ilen; $i++) {
+		foreach($this->dataArray as $ak => $av) {
 
-			if($this->dataArray[$i]->id == $id) {
-				$this->currentMemorySize -= $this->dataArray[$i]->dataSize;
-				unset($this->dataArray[$i]);
+			if($av->id == $id) {
+				$this->currentMemorySize -= $av->dataSize;
+				unset($this->dataArray[$ak]);
 				return true;
 			}
 		}
@@ -198,12 +198,12 @@ class MemCacheData {
 	 */
 	public function deleteEOLCaches($currentTime) {
 
-		for($i = 0, $ilen = count($this->dataArray); $i < $ilen; $i++) {
+		foreach($this->dataArray as $ak => $av) {
 
-			if(($this->dataArray[$i]->lifeTime > 0)) {
-				$cacheEndTime = $this->dataArray[$i]->setTime + $this->dataArray[$i]->lifeTime;
+			if($av->lifeTime > 0) {
+				$cacheEndTime = $av->setTime + $av->lifeTime;
 				if($cacheEndTime < $currentTime) {
-					unset($this->dataArray[$i]);
+					unset($this->dataArray[$ak]);
 				}
 			}
 		}
