@@ -501,13 +501,16 @@ IOImageField.prototype			= {
 					}),
 					dataType: 'json',
 					type: 'POST',
-					xhrFields: {
-						onprogress: function (event) {
-							if (event.lengthComputable) {
-								var percent		= event.loaded / event.total * 100;
+					xhr: function () {
+						var xhr = new window.XMLHttpRequest();
+						xhr.addEventListener("progress", function (evt) {
+
+							if (evt.lengthComputable) {
+								var percentComplete = Math.round(evt.loaded / evt.total * 100);
 								instance.setProgressbar(percent);
 							}
-						}
+						}, false);
+						return xhr;
 					},
 					success: function(response)
 					{

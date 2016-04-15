@@ -1,17 +1,30 @@
-/**
- * Created by ilk3r on 14/08/15.
+/*!
+ * Created by ilk3r on 18/02/16.
  */
 
-if (!String.prototype.format)
-{
-	String.prototype.format = function()
-	{
+
+if (!String.prototype.format) {
+
+	String.prototype.format = function() {
 		var newStr			= this, i = 0;
 
 		while (/%s/.test(newStr))
-			newStr			= newStr.replace("%s", arguments[i++])
+			newStr = newStr.replace("%s", arguments[i++]);
 
 		return newStr;
+	}
+}
+
+if(!Array.prototype.contains) {
+
+	Array.prototype.contains = function(k) {
+
+		for(var i=0; i < this.length; i++){
+			if(this[i] === k){
+				return true;
+			}
+		}
+		return false;
 	}
 }
 
@@ -108,8 +121,7 @@ var IO_Helpers					= {
 
 		return response;
 	},
-	checkIsFunction				: function(callbackFunction)
-	{
+	checkIsFunction: function(callbackFunction) {
 		if(callbackFunction && (typeof(callbackFunction) === 'function'))
 		{
 			return true;
@@ -117,7 +129,7 @@ var IO_Helpers					= {
 			return false;
 		}
 	},
-	getBaseUrl					: function() {
+	getBaseUrl: function() {
 
 		if (!window.location.origin) {
 			window.location.origin = window.location.protocol + "//" + window.location.hostname + (window.location.port ? ':' + window.location.port: '');
@@ -125,16 +137,46 @@ var IO_Helpers					= {
 
 		return window.location.origin;
 	},
-	isInteger					: function(number) {
+	isInteger: function(number) {
 
 		return '' + number === '' + parseInt(number);
+	},
+	parseUri: function(url) {
+
+		var result = {};
+
+		var anchor = document.createElement('a');
+		anchor.href = url;
+
+		var keys = 'protocol hostname host pathname port search hash href'.split(' ');
+		for (var keyIndex in keys) {
+			var currentKey = keys[keyIndex];
+			result[currentKey] = anchor[currentKey];
+		}
+
+		result.toString = function() { return anchor.href; };
+		result.requestUri = result.pathname + result.search;
+		return result;
+
+	},
+	getScreenType: function() {
+
+		var swRef = screen.width;
+		if(swRef < 768) {
+			return 'xs';
+		}else if(swRef > 767 && swRef < 992) {
+			return 'sm';
+		}else if(swRef > 991 && swRef < 1200) {
+			return 'md';
+		}else{
+			return 'lg';
+		}
 	}
 };
 
 var IO_debug					= {
 	isDevelopment				: false,
-	log							: function ()
-	{
+	log							: function () {
 		if(!window.console)
 			return;
 
@@ -145,9 +187,16 @@ var IO_debug					= {
 	}
 };
 
-function IO_JsonRequest(apiUrl, objectData, callback) {
+function IO_JsonRequest(apiUrl, objectData, callback, changeUrl) {
 
-	var requestUrl = "%s/ajax/%s/".format(IO_Helpers.getBaseUrl(), apiUrl);
+	var urlChange = (typeof(changeUrl) != 'undefined') ? changeUrl : true;
+
+	var requestUrl = null;
+	if(urlChange) {
+		requestUrl = "%s/%s/".format(IO_Helpers.getBaseUrl(), apiUrl);
+	}else{
+		requestUrl = apiUrl;
+	}
 
 	var xhr = $.ajax(requestUrl, {
 		method: 'POST',
@@ -162,4 +211,15 @@ function IO_JsonRequest(apiUrl, objectData, callback) {
 	});
 
 	return xhr;
+}
+
+function IO_CheckScrollIsBottom(callback) {
+
+	window.onscroll = function(ev) {
+		if ((window.innerHeight + window.scrollY) >= (document.body.offsetHeight - 60)) {
+			if(IO_Helpers.checkIsFunction(callback)) {
+				callback();
+			}
+		}
+	};
 }

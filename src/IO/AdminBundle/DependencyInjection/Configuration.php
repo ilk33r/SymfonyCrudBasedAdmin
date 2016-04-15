@@ -36,6 +36,7 @@ class Configuration implements ConfigurationInterface
 							->scalarNode('category')->defaultValue('')->end()
 							->scalarNode('path')->defaultValue('')->end()
 							->booleanNode('hasAddPermission')->defaultValue(true)->end()
+							->scalarNode('role')->defaultValue('ROLE_SUPERADMIN')->end()
 						->end()
 					->end()
 				->end()

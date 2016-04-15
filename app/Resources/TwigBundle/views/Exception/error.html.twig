@@ -1,0 +1,13 @@
+{% extends 'TwigBundle:Exception:customexceptions_master.html.twig' %}
+
+{% block Title %}
+	<title>{{ status_code }}</title>
+{% endblock %}
+
+{% block HeaderTitle %}
+	<h1>{{ status_code }}</h1>
+{% endblock %}
+
+{% block ExceptionContent %}
+	<p>{{ status_text }}</p>
+{% endblock %}

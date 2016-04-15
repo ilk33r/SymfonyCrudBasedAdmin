@@ -6,6 +6,8 @@ security:
     role_hierarchy:
         ROLE_ADMIN:       ROLE_USER
         ROLE_SUPER_ADMIN: ROLE_ADMIN
+        #ROLE_ADMIN: [ROLE_MODERATOR, ROLE_USER]
+        #ROLE_SUPER_ADMIN: [ROLE_ADMIN, ROLE_MODERATOR, ROLE_USER]
 
     providers:
         in_memory:
@@ -20,6 +22,10 @@ security:
             pattern: ^/(_(profiler|wdt|error)|css|images|js)/
             security: false
 
+        closedSecurity:
+            pattern: ^/(css|images|assets|js|woff|woff2|eot|ttf)/
+            security: false
+
         admin:
             pattern: ^/admin
             form_login:
@@ -28,8 +34,13 @@ security:
                 #csrf_token_generator: security.csrf.token_manager # Use form.csrf_provider instead for Symfony <2.4
                 login_path: /admin/login
                 check_path: /admin/login_check
+                #remember_me: true
+                #username_parameter: userName
+                #password_parameter: password
                 always_use_default_target_path: false
                 default_target_path: /admin
+                #failure_handler: app.authentication_handler
+                #success_handler: app.authentication_handler
             logout:
                 path:   /admin/logout
                 target: /admin/login
@@ -56,7 +67,7 @@ security:
         - { path: ^/admin/login$, role: IS_AUTHENTICATED_ANONYMOUSLY }
         - { path: ^/admin/resetting, role: IS_AUTHENTICATED_ANONYMOUSLY }
         - { path: ^/admin/register, role: ROLE_ADMIN }
-        - { path: ^/admin, role: ROLE_ADMIN }
+        - { path: ^/admin, role: [ROLE_SUPER_ADMIN, ROLE_ADMIN] }
         - { path: ^/user/login, role: IS_AUTHENTICATED_ANONYMOUSLY }
         - { path: ^/user/logout, role: IS_AUTHENTICATED_ANONYMOUSLY }
         - { path: ^/user/register, role: IS_AUTHENTICATED_ANONYMOUSLY }

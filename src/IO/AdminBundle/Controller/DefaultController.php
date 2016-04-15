@@ -11,18 +11,26 @@ use Symfony\Component\Form\FormError;
 //use Symfony\Component\Filesystem\Exception;
 use Symfony\Component\Process\Exception\InvalidArgumentException;
 
-
 use Doctrine\ORM\Tools\Pagination\Paginator;
 use Doctrine\DBAL\DBALException;
 use IO\AdminBundle\Form\UsersType;
 use IO\ServicesBundle\Helpers\MemcacheServerHelper;
 
-class DefaultController extends Controller
-{
+/**
+ * Class DefaultController
+ * @package IO\AdminBundle\Controller
+ */
+class DefaultController extends Controller {
+
+	/**
+	 * @var bool
+	 */
 	private $addUserSuccess = false;
 
-    public function indexAction()
-    {
+	/**
+	 * @return Response
+	 */
+    public function indexAction() {
 		$database				= $this->get('database_connection');
 		$databaseName			= $this->container->getParameter('database_name');
 		$databaseSize			= 0;
@@ -96,14 +104,19 @@ class DefaultController extends Controller
         return $this->render('IOAdminBundle:Default:index.html.twig', $templateParams);
     }
 
-	public function list_usersAction($pageNumber = 1)
-	{
-		$displayPerPage		= 50;
-		$startRow			= ($pageNumber - 1) * $displayPerPage;
+	/**
+	 * @param int $pageNumber
+	 * @return Response
+	 */
+	public function list_usersAction($pageNumber = 1) {
+
+		$displayPerPage = 15;
+		$startRow = ($pageNumber - 1) * $displayPerPage;
 
 		$userClass			= $this->container->getParameter('io_admin.user_class');
-		$em = $this->getDoctrine()->getManager()->getRepository($userClass);
-		$entities = $em->createQueryBuilder('u');
+		$userRepository = $this->getDoctrine()->getManager()->getRepository($userClass);
+
+		$entities = $userRepository->createQueryBuilder('u');
 		$entities->addSelect('u.id');
 		$entities->addSelect('u.username');
 		$entities->addSelect('u.usernameCanonical');
@@ -117,12 +130,17 @@ class DefaultController extends Controller
 		$entities->orderBy('u.id', 'ASC')->setFirstResult($startRow)
 			->setMaxResults($displayPerPage);
 
-		$paginator = new Paginator($entities, $fetchJoinCollection = true);
-		$resultCount = count($paginator);
-		$pageCount = ceil($resultCount / $displayPerPage);
+		$userCountQuery = $userRepository->createQueryBuilder('uc')
+			->select('count(uc.id) as userCount')
+			->getQuery();
+		$userCountData = $userCountQuery->getResult();
+		$userCount = (int)$userCountData[0]['userCount'];
+
+		$pageCount = ceil($userCount / $displayPerPage);
 
 		return $this->render('IOAdminBundle:Users:list.html.twig', array(
-			'entities' => $paginator,
+
+			'entities' => $entities->getQuery()->getResult(),
 			'pageCount' => $pageCount,
 			'currentPage' => $pageNumber
 		));

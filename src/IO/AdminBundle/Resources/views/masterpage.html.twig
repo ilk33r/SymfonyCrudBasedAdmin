@@ -29,6 +29,7 @@
 		<div class="col-md-2 column menuArea">
 			<a class="changePasswordLink" href="{{ path('fos_user_change_password') }}"><i class="glyphicon glyphicon-wrench" aria-hidden="true"></i>Welcome, {{ app.user.username }}</a>
 			{% for menuItem in io_admin.adminMenu %}
+				{% if is_granted(menuItem.role) %}
 				<span class="label menuGroup"><i class="glyphicon glyphicon-plus" aria-hidden="true"></i>{{ menuItem.category }}</span>
 				<ul>
 					<li><a href="{{ path(menuItem.path) }}" class="text-anchor">List {{ menuItem.category }}</a></li>
@@ -36,11 +37,15 @@
 					<li><a href="{{ path(menuItem.path ~ '_new') }}" class="text-anchor">Add {{ menuItem.category }}</a></li>
 					{% endif %}
 				</ul>
+				{% endif %}
 			{% endfor %}
 			<span class="label menuGroup"><i class="glyphicon glyphicon-user" aria-hidden="true"></i>Users</span>
 			<ul>
+				<li><a href="{{ path('io_admin_find_users') }}" class="text-anchor">Find User</a></li>
+				{% if is_granted('ROLE_ADMIN') %}
 				<li><a href="{{ path('io_admin_list_users') }}" class="text-anchor">List Users</a></li>
 				<li><a href="{{ path('io_admin_add_user') }}" class="text-anchor">Add User</a></li>
+				{% endif %}
 				<li><a href="{{ path('fos_user_security_logout') }}" class="text-anchor">Logout</a></li>
 			</ul>
 		</div>
