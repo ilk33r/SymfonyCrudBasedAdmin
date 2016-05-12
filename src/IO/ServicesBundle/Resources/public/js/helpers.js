@@ -171,6 +171,35 @@ var IO_Helpers					= {
 		}else{
 			return 'lg';
 		}
+	},
+	generateFormData: function(formId) {
+
+		var form = document.getElementById(formId);
+		var inputs = form.getElementsByTagName('input');
+		var selects = form.getElementsByTagName('select');
+		var textareas = form.getElementsByTagName('textarea');
+
+		var postData = {};
+
+		for(var i = 0, il = inputs.length; i < il; i++) {
+
+			var iname = inputs[i].name;
+			postData[iname] = inputs[i].value;
+		}
+
+		for(var s = 0, sl = selects.length; s < sl; s++) {
+
+			var sname = selects[s].name;
+			postData[sname] = selects[s].value;
+		}
+
+		for(var t = 0, tl = textareas.length; t < tl; t++) {
+
+			var tname = textareas[t].name;
+			postData[tname] = textareas[t].value;
+		}
+
+		return postData;
 	}
 };
 
