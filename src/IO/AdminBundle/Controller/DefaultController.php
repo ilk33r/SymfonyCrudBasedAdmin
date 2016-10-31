@@ -3,18 +3,16 @@
 namespace IO\AdminBundle\Controller;
 
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
+use Symfony\Component\Form\Extension\Core\Type\HiddenType;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Kernel;
 use Symfony\Component\Form\FormError;
-//use Symfony\Component\Filesystem\Filesystem;
-//use Symfony\Component\Filesystem\Exception;
-use Symfony\Component\Process\Exception\InvalidArgumentException;
-
-use Doctrine\ORM\Tools\Pagination\Paginator;
 use Doctrine\DBAL\DBALException;
 use IO\AdminBundle\Form\UsersType;
 use IO\ServicesBundle\Helpers\MemcacheServerHelper;
+use Doctrine\ORM\EntityManager;
+use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 
 /**
  * Class DefaultController
@@ -370,7 +368,7 @@ class DefaultController extends Controller {
 		return $this->createFormBuilder()
 			->setAction($this->generateUrl('io_admin_delete_user', array('userName' => $userName)))
 			->setMethod('DELETE')
-			->add('submit', 'submit', array('label' => 'Delete'))
+			->add('submit', SubmitType::class, array('label' => 'Delete'))
 			->getForm()
 			;
 	}
@@ -388,14 +386,12 @@ class DefaultController extends Controller {
 
 	private function getEditUserForm($userName)
 	{
-		$form = $this->createForm(new UsersType(), null, array(
+		$form = $this->createForm(UsersType::class, null, array(
 			'action' => $this->generateUrl('io_admin_update_user'),
 			'method' => 'PUT',
 		));
-		$form->add('currentUserName', 'hidden', array('data'=>$userName));
-		$form->add('submit', 'submit', array('label' => 'Save'));
-
-		return $form;
+		$form->add('currentUserName', HiddenType::class, array('data'=>$userName));
+		$form->add('submit', SubmitType::class, array('label' => 'Save'));
 	}
 
 	public function startMemcacheServerAction() {
@@ -446,5 +442,62 @@ class DefaultController extends Controller {
 		$returnVal = $this->redirect($this->generateUrl('io_admin_homepage'));
 		usleep(500000);
 		return $returnVal;
+	}
+
+	public function findUserAction(Request $request) {
+
+		$error = array(
+			'title' => '',
+			'message' => ''
+		);
+
+		if($request->getMethod() == 'POST') {
+
+			$userName = $request->request->get('userName');
+
+			if(strlen($userName) < 2) {
+				$error['title'] = 'Hata';
+				$error['message'] = 'Bir kullanıcı adı girmedin.';
+			}else{
+
+				/** @var EntityManager $em */
+				$em = $this->getDoctrine()->getManager();
+
+				$userClass = $this->container->getParameter('io_admin.user_class');
+				$userRepository = $em->getRepository($userClass);
+
+				/** @var array $users */
+				$users = $userRepository->createQueryBuilder('u')
+				                        ->select('u.id', 'u.username', 'u.email',
+					                        'u.realName', 'u.realSurname', 'u.roles')
+				                        ->where('u.username like :willSearchUsername')
+				                        ->setParameter(':willSearchUsername', $userName . '%')
+				                        ->orderBy('u.id', 'ASC')
+				                        ->setFirstResult(0)
+				                        ->setMaxResults(100)
+				                        ->getQuery()
+				                        ->getArrayResult();
+
+				if(count($users) > 0) {
+
+					/** @var User $curretnUser */
+					$curretnUser = $this->getUser();
+
+					return $this->render('IOAdminBundle:UserManagement:find_user_result.html.twig',
+						array(
+							'users' => $users,
+							'loggedInUserRoles' => $curretnUser->getRoles()
+						));
+				}else{
+					$error['title'] = 'Hata';
+					$error['message'] = 'Aradıgınız isimde kullanıcı bulunamadı.';
+				}
+			}
+		}
+
+		return $this->render('IOAdminBundle:UserManagement:find_user.html.twig',
+			array(
+				'error' => $error,
+			));
 	}
 }

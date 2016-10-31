@@ -1,0 +1,48 @@
+{% extends 'IOAdminBundle::masterpage.html.twig' %}
+
+
+{% block AdminBreadCrumb %}
+	<ul class="breadcrumb">
+		<li><a href="{{ path('io_admin_homepage') }} ">Admin</a><span class="divider"></span></li>
+		<li><a href="{{ path('io_admin_find_users') }} ">Find User</a><span class="divider"></span></li>
+		<li class="active">Search Result</li>
+	</ul>
+{% endblock %}
+
+{% block AdminMainPage %}
+	<table class="table table-hover">
+		<thead>
+			<tr>
+				<th>Id</th>
+				<th>User Name</th>
+				<th>E-Mail</th>
+				<th>Name</th>
+				<th>Surname</th>
+				<th>Roles</th>
+				<th>Actions</th>
+			</tr>
+		</thead>
+		<tbody>
+		{% for user in users %}
+			{% set urlPath = path('io_admin_edit_user', { 'userName': user.username }) %}
+			<tr>
+				<td><a href="{{ urlPath }}">{{ user.id }}</a></td>
+				<td><a href="{{ urlPath }}">{{ user.username }}</a></td>
+				<td><a href="{{ urlPath }}">{{ user.email }}</a></td>
+				<td><a href="{{ urlPath }}">{{ user.realName }}</a></td>
+				<td><a href="{{ urlPath }}">{{ user.realSurname }}</a></td>
+				<td><a href="{{ urlPath }}">
+						{%- for userRole in user.roles -%}
+						{{ userRole }} <br/>
+						{%- endfor -%}
+					</a></td>
+				<td>
+					<a class="optionLink mtmSelectLink" href="{{ urlPath }}" title="Edit" data-displayName="Edit"><i class="glyphicon glyphicon-edit"></i></a>
+				</td>
+			</tr>
+		{% endfor %}
+		</tbody>
+	</table>
+
+{% endblock %}
+

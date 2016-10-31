@@ -56,12 +56,12 @@
     */
     private function createEditForm({{ entity_class }} $entity)
     {
-        $form = $this->createForm(new {{ entity_class }}Type(), $entity, array(
+        $form = $this->createForm({{ entity_class }}Type::class, $entity, array(
             'action' => $this->generateUrl('{{ route_name_prefix }}_update', array('id' => $entity->getId())),
             'method' => 'PUT',
         ));
 
-        $form->add('submit', 'submit', array('label' => 'Update'));
+        $form->add('submit', SubmitType::class, array('label' => 'Update'));
 
         return $form;
     }

@@ -1,0 +1,31 @@
+{% extends 'IOAdminBundle::masterpage.html.twig' %}
+
+{% block AdminBreadCrumb %}
+	<ul class="breadcrumb">
+		<li><a href="{{ path('io_admin_homepage') }}">Admin</a><span class="divider"></span></li>
+		<li class="active">Find User</li>
+	</ul>
+{% endblock %}
+
+{% block AdminMainPage %}
+	<form method="POST" action="{{ path('io_admin_find_users') }}" role="form">
+		{% if error.title is not empty %}
+		<div class="alert alert-dismissable alert-danger">
+			<button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+			<h4>{{ error.title }}!</h4>
+			<p>{{ error.message }}</p>
+		</div>
+		{% endif %}
+
+		<div class="adminForm">
+			<div class="form-group">
+				<label for="userName">User Name:</label>
+				<fieldset>
+					<input type="text" name="userName" class="form-control" />
+				</fieldset>
+			<div class="clearfix"></div>
+		</div>
+
+		<input type="submit" name="searchUser" class="btn btn-default pull-right" value="Search">
+	</form>
+{% endblock %}

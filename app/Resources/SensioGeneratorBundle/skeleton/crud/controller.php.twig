@@ -17,6 +17,7 @@ use Sensio\Bundle\FrameworkExtraBundle\Configuration\Template;
 use Symfony\Component\Form\FormError;
 use Doctrine\ORM\Tools\Pagination\Paginator;
 use Doctrine\DBAL\DBALException;
+use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 
 use {{ namespace }}\Entity\{{ entity }};
 {% if 'new' in actions or 'edit' in actions %}
