@@ -44,14 +44,14 @@ class ImageManipulator
 		$this->setSourceType();
 		$this->fileSystem = new Filesystem();
 
-		if(!$this->fileSystem->exists($this->sourcePath . $this->sourceFileName))
+		if(!$this->fileSystem->exists($this->sourcePath . '/' . $this->sourceFileName))
 		{
 			throw new \Exception('Source file not found File: '. __FILE__ . ' Line: ' . __LINE__, 1002);
 		}
 
 		$this->sourceGDImage = $this->createGDImage();
 		$this->destinationType = (empty($destinationType)) ? $this->sourceType : $destinationType;
-		$sourceInfo			= getimagesize($this->sourcePath . $this->sourceFileName);
+		$sourceInfo			= getimagesize($this->sourcePath . '/' . $this->sourceFileName);
 		$this->sourceWidth	= $sourceInfo[0];
 		$this->sourceHeight	= $sourceInfo[1];
 		$this->currentImageWidth = $this->sourceWidth;
@@ -83,13 +83,13 @@ class ImageManipulator
 		switch($this->sourceType)
 		{
 			case 'image/jpeg':
-				return imagecreatefromjpeg($this->sourcePath . $this->sourceFileName);
+				return imagecreatefromjpeg($this->sourcePath . '/' . $this->sourceFileName);
 				break;
 			case 'image/gif':
-				return imagecreatefromgif($this->sourcePath . $this->sourceFileName);
+				return imagecreatefromgif($this->sourcePath . '/' . $this->sourceFileName);
 				break;
 			case 'image/png':
-				return imagecreatefrompng($this->sourcePath . $this->sourceFileName);
+				return imagecreatefrompng($this->sourcePath . '/' . $this->sourceFileName);
 				break;
 			default:
 				throw new \Exception('File is not image File: '. __FILE__ . ' Line: ' . __LINE__ . ' Source type: ' . $this->sourceType, 1001);
@@ -129,40 +129,43 @@ class ImageManipulator
 		return $this;
 	}
 
-	public function cropImage($newWidth, $newHeight)
+	public function cropImage($newWidth, $newHeight, $x = -1, $y = -1)
 	{
-		$bgImage			= imagecreatetruecolor(1000, 1000);
-		$black				= imagecolorallocate($bgImage, 0, 0, 0);
-		imagefill($bgImage, 0, 0, $black);
-		$bigImageDestX		= (1000 - $this->currentImageWidth) / 2;
-		$bigImageDesty		= (1000 - $this->currentImageHeight) / 2;
+		$bgImage = imagecreatetruecolor($newWidth, $newHeight);
+		$whiteColor = imagecolorallocate($bgImage, 255, 255, 255);
+		imagefill($bgImage, 0, 0, $whiteColor);
 
-		if($this->temporaryImage)
-		{
-			imagecopyresampled($bgImage, $this->temporaryImage, $bigImageDestX, $bigImageDesty, 0, 0, $this->currentImageWidth, $this->currentImageHeight, $this->currentImageWidth, $this->currentImageHeight);
+		$srcX = 0;
+		$srcY = 0;
+
+		if($x == -1) {
+			$srcX = floor(abs($this->currentImageWidth - $newWidth) / 2);
 		}else{
-			imagecopyresampled($bgImage, $this->sourceGDImage, $bigImageDestX, $bigImageDesty, 0, 0, $this->currentImageWidth, $this->currentImageHeight, $this->currentImageWidth, $this->currentImageHeight);
+			$srcX = $x;
 		}
 
-		$destX				= floor((1000 - $newWidth) / 2);
-		$destY				= floor((1000 - $newHeight) / 2);
-		$croppedImageData	= array(
-								'x' => $destX ,
-								'y' => $destY,
-								'width' => $newWidth,
-								'height'=> $newHeight
-		);
+		if($y == -1) {
+			$srcY = floor(abs($this->currentImageHeight - $newHeight) / 2);
+		}else{
+			$srcY = $y;
+		}
 
-		$croppedImage		= imagecrop($bgImage, $croppedImageData);
+		if($this->temporaryImage) {
+
+			imagecopyresampled($bgImage, $this->temporaryImage,
+				0, 0, $srcX, $srcY, $this->currentImageWidth, $this->currentImageHeight, $this->currentImageWidth, $this->currentImageHeight);
+		}else{
+			imagecopyresampled($bgImage, $this->sourceGDImage,
+				0, 0, $srcX, $srcY, $this->currentImageWidth, $this->currentImageHeight, $this->currentImageWidth, $this->currentImageHeight);
+		}
 
 		if($this->sourceType == 'image/png')
 		{
 			imagealphablending($bgImage, TRUE);
-			imagealphablending($croppedImage, FALSE);
-			imagesavealpha($croppedImage, TRUE);
+			imagesavealpha($bgImage, TRUE);
 		}
 
-		$this->temporaryImage = $croppedImage;
+		$this->temporaryImage = $bgImage;
 		return $this;
 	}
 
@@ -171,16 +174,16 @@ class ImageManipulator
 		switch($this->destinationType)
 		{
 			case 'image/jpeg':
-				$imageStatus	= imagejpeg($this->temporaryImage, $this->destinationPath . $this->sourceFileName, $this->quality);
+				$imageStatus	= imagejpeg($this->temporaryImage, $this->destinationPath . '/' . $this->sourceFileName, $this->quality);
 				break;
 			case 'image/gif':
-				$imageStatus	= imagegif($this->temporaryImage, $this->destinationPath .$this->sourceFileName);
+				$imageStatus	= imagegif($this->temporaryImage, $this->destinationPath . '/' . $this->sourceFileName);
 				break;
 			case 'image/png':
 				$tmpQuality		= ($this->quality > 9)?9:$this->quality;
 				imagealphablending($this->temporaryImage, FALSE);
 				imagesavealpha($this->temporaryImage, TRUE);
-				$imageStatus	= imagepng($this->temporaryImage, $this->destinationPath .$this->sourceFileName, $tmpQuality);
+				$imageStatus	= imagepng($this->temporaryImage, $this->destinationPath . '/' . $this->sourceFileName, $tmpQuality);
 				break;
 		}
 
@@ -201,4 +204,20 @@ class ImageManipulator
 	{
 		return imagecreatetruecolor($width, $height);
 	}
+
+	/**
+	 * @return mixed
+	 */
+	public function getCurrentImageWidth() {
+		return $this->currentImageWidth;
+	}
+
+	/**
+	 * @return mixed
+	 */
+	public function getCurrentImageHeight() {
+		return $this->currentImageHeight;
+	}
+
+
 }

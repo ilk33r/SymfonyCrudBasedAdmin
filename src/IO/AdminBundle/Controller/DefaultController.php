@@ -181,7 +181,7 @@ class DefaultController extends Controller {
 		$editUserForm->get('username')->setData($userName);
 		$editUserForm->get('email')->setData($user->getEmail());
 		$userRoles = $user->getRoles();
-		$editUserForm->get('userRole')->setData($userRoles[0]);
+		$editUserForm->get('userRole')->setData($userRoles);
 		$editUserForm->get('enabled')->setData($user->isEnabled());
 
 		return $this->render('IOAdminBundle:Users:add_edit.html.twig', array(
@@ -223,7 +223,7 @@ class DefaultController extends Controller {
 			{
 				$user->setPlainPassword($password);
 			}
-			$user->setRoles(array($role));
+			$user->setRoles($role);
 
 			$userManager->updateUser($user, false);
 
@@ -375,11 +375,11 @@ class DefaultController extends Controller {
 
 	private function getAddUserForm()
 	{
-		$form = $this->createForm(new UsersType(), null, array(
+		$form = $this->createForm(UsersType::class, null, array(
 			'action' => $this->generateUrl('io_admin_create_user'),
 			'method' => 'POST',
 		));
-		$form->add('submit', 'submit', array('label' => 'Create User'));
+		$form->add('submit', SubmitType::class, array('label' => 'Create User'));
 
 		return $form;
 	}

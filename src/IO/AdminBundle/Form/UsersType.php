@@ -20,8 +20,13 @@ class UsersType extends AbstractType
 	    $builder->add('email', EmailType::class, array('mapped' => false));
 	    $builder->add('plainPassword', PasswordType::class, array('mapped' => false, 'required'=>false));
 	    $builder->add('userRole', ChoiceType::class, array(
-		    'choices' => array('ROLE_USER'=>'User', 'ROLE_ADMIN'=>'Admin'),
+		    'choices' => array(
+			    'User'=>'ROLE_USER',
+			    'Admin'=>'ROLE_ADMIN',
+			    'Super Admin'=>'ROLE_SUPER_ADMIN'
+		    ),
 		    'mapped' => false,
+		    'multiple' => true
 	    ));
 	    $builder->add('enabled', ChoiceType::class, array(
 		    'choices' => array(0=>'No', 1=>'Yes'),

@@ -28,7 +28,7 @@ class AjaxImageUploader
 
 	public function __construct(Kernel $kernel)
 	{
-		$this->webRootDir = $kernel->getRootDir() . '/../web';
+		$this->webRootDir = $kernel->getRootDir() . '/..';
 	}
 
 	public function uploadImageFile(Request $request, $path)
@@ -80,7 +80,7 @@ class AjaxImageUploader
 			$data	= explode(',', $imageData->imageData);
 			try
 			{
-				$fs->dumpFile($uploadFolder . $imagePrettyName, base64_decode($data[1]));
+				$fs->dumpFile($uploadFolder . '/' . $imagePrettyName, base64_decode($data[1]));
 			}catch (IOExceptionInterface $e)
 			{
 				return self::$errors[4];

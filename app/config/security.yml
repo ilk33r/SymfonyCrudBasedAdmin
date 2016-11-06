@@ -56,6 +56,10 @@ security:
                 check_path: /login_check
                 always_use_default_target_path: false
                 default_target_path: /
+                remember_me: true
+                remember_me: true
+                failure_handler: app.authentication_handler
+                success_handler: app.authentication_handler
             logout:
                 path:   /logout
                 target: /login

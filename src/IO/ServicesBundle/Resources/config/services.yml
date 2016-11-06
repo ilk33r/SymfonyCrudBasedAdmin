@@ -5,6 +5,12 @@ services:
     io_services.file_uploader:
         class: IO\ServicesBundle\Services\AjaxImageUploader
         arguments: ['@kernel']
+
+    io_services.ajax_template_renderer:
+        class: IO\ServicesBundle\Services\RenderForAjax
+        arguments:
+            0: "@twig"
+            1: "@request_stack"
         
     io_services.kernel.exception_service:
         class: SomeBundle\Services\KernelExceptionListerner

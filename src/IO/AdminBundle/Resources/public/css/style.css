@@ -49,3 +49,11 @@ a.changePasswordLink:hover{color: #acacac;}
 .adminPageRow .adminImageUploadArea span{text-align: center;width: 100%;display: table-cell;vertical-align: middle;}
 .adminPageRow .fakeInput{display: none;}
 .adminPageRow .progress{display: none;}
+
+.adminPageRow .adminMultipleImageUploadAreaScroll{overflow: auto;white-space: nowrap;}
+.adminPageRow .adminMultipleImageUploadArea{max-width: none;white-space: nowrap;}
+.adminPageRow .adminMultipleImageUploadArea > div{max-height: 250px; display: inline-block;	position: relative;}
+.adminPageRow .adminMultipleImageUploadArea > div > img{width: auto; height: 100%; display: inline-block; max-height: 250px;}
+.adminPageRow .adminMultipleImageUploadArea > div > a {	font-size: 24px; position: absolute; top: 8px; right: 8px; font-weight: 900;
+	background: rgba(0, 0, 0, 0.6); width: 36px; height: 39px; display: inline-block; text-align: center; border-radius: 8px;
+	color: #f00;}

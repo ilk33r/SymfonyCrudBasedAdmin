@@ -41,71 +41,71 @@ function IORichText(inputId)
 		user_pref("capability.policy.allowclipboard.Clipboard.paste", "allAccess");
 	}
 
-	$('#btnRichTextBold').click(function(){
+	$('#btnRichTextBold-' + inputId).click(function(){
 		instance.bold();
 	});
-	$('#btnRichTextItalic').click(function(){
+	$('#btnRichTextItalic-' + inputId).click(function(){
 		instance.italic();
 	});
-	$('#btnRichTextUnderline').click(function(){
+	$('#btnRichTextUnderline-' + inputId).click(function(){
 		instance.underline();
 	});
-	$('#btnRichTextHead').click(function(){
+	$('#btnRichTextHead-' + inputId).click(function(){
 		instance.textHead();
 	});
-	$('#btnRichTextLeft').click(function(){
+	$('#btnRichTextLeft-' + inputId).click(function(){
 		instance.textLeft();
 	});
-	$('#btnRichTextCenter').click(function(){
+	$('#btnRichTextCenter-' + inputId).click(function(){
 		instance.textCenter();
 	});
-	$('#btnRichTextRight').click(function(){
+	$('#btnRichTextRight-' + inputId).click(function(){
 		instance.textRight();
 	});
-	$('#btnRichTextOrderedList').click(function(){
+	$('#btnRichTextOrderedList-' + inputId).click(function(){
 		instance.orderedList();
 	});
-	$('#btnRichTextUnorderedList').click(function(){
+	$('#btnRichTextUnorderedList-' + inputId).click(function(){
 		instance.unorderedList();
 	});
-	$('#btnRichTextCreateLink').click(function(){
+	$('#btnRichTextCreateLink-' + inputId).click(function(){
 		instance.createLink();
 	});
-	$('#btnRichTextAddPicture').click(function(){
+	$('#btnRichTextAddPicture-' + inputId).click(function(){
 		instance.addPicture();
 	});
-	$('#btnRichTextCut').click(function(){
+	$('#btnRichTextCut-' + inputId).click(function(){
 		instance.cut();
 	});
-	$('#btnRichTextCopy').click(function(){
+	$('#btnRichTextCopy-' + inputId).click(function(){
 		instance.copy();
 	});
-	$('#btnRichTextPaste').click(function(){
+	$('#btnRichTextPaste-' + inputId).click(function(){
 		instance.paste();
 	});
-	$('#btnRichTextHtml').click(function(){
+	$('#btnRichTextHtml-' + inputId).click(function(){
 		instance.openHtmlModal();
 	});
-	$('#btnRichTextRemoveFormat').click(function(){
+	$('#btnRichTextRemoveFormat-' + inputId).click(function(){
 		instance.removeTextFormat();
 	});
-	$('#btnRichTextUndo').click(function(){
+	$('#btnRichTextUndo-' + inputId).click(function(){
 		instance.undo();
 	});
-	$('#btnRichTextRedo').click(function(){
+	$('#btnRichTextRedo-' + inputId).click(function(){
 		instance.redo();
 	});
 
-	this.editableDiv			= document.getElementById('adminRichTextDiv');
-	this.hiddenInput			= $('#' + inputId);
+	this.editableDiv = document.getElementById('adminRichTextDiv-' + inputId);
+	this.hiddenInput = $('#' + inputId);
 
-	var modalHtml				= '<div class="modal fade" id="richTextEditUserInsertDialog"><div class="modal-dialog"><div class="modal-content">';
-	modalHtml					+= '<div class="modal-header"> <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>';
-	modalHtml					+= '<h4 class="modal-title" id="richTextEditInsertTitle"></h4>';
-	modalHtml					+= '</div><div class="modal-body">';
-	modalHtml					+= '<textarea rows="8" id="richTextEditUserInsertContent" class="form-control"></textarea>';
-	modalHtml					+= '</div><div class="modal-footer"><button id="richTextEditUserInsertContentSave" type="button" class="btn btn-primary">Save changes</button>';
-	modalHtml					+= '</div></div></div></div>';
+	var modalHtml = '<div class="modal fade" id="richTextEditUserInsertDialog"><div class="modal-dialog"><div class="modal-content">';
+	modalHtml += '<div class="modal-header"> <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>';
+	modalHtml += '<h4 class="modal-title" id="richTextEditInsertTitle"></h4>';
+	modalHtml += '</div><div class="modal-body">';
+	modalHtml += '<textarea rows="8" id="richTextEditUserInsertContent" class="form-control"></textarea>';
+	modalHtml += '</div><div class="modal-footer"><button id="richTextEditUserInsertContentSave" type="button" class="btn btn-primary">Save changes</button>';
+	modalHtml += '</div></div></div></div>';
 
 	$('body').append(modalHtml);
 
@@ -422,7 +422,7 @@ function IOImageField(inputId, uploadPath, uploadRoute)
 	this.setupModal();
 }
 
-IOImageField.prototype			= {
+IOImageField.prototype = {
 	constructor					: IOImageField,
 	imageFileStatus				: function(event)
 	{
@@ -540,7 +540,7 @@ IOImageField.prototype			= {
 	{
 		this.setProgressbar(100);
 		this.imageUploading		= false;
-		var imageUrl			= this.uploadPath + fileName;
+		var imageUrl			= this.uploadPath + '/' + fileName;
 		$('#uploadArea-'+this.inputId).html('<img src="' + imageUrl + '">');
 		$('#'+this.inputId).val(fileName);
 	},
@@ -596,5 +596,308 @@ IOImageField.prototype			= {
 				progress.hide();
 			}, 1000);
 		}
+	}
+};
+
+// ajax multiple image uploader
+function IOMultipleImageField(inputId, uploadPath, uploadRoute, fullName) {
+
+	this.inputId = inputId;
+	this.imageUploading = false;
+	this.uploadPath = uploadPath;
+	this.uploadRoute = uploadRoute;
+	this.fullName = fullName;
+	this.currentLoopIdx = 0;
+	var instance = this;
+
+	$('#fakeInput-' + inputId).change(function (event) {
+
+		if(!instance.imageUploading)
+			instance.imageFileStatus(event);
+	});
+
+	var uploadArea = $('#uploadArea-' + inputId);
+	this.currentLoopIdx = uploadArea.children().length;
+
+	uploadArea.click(function() {
+
+		if(!instance.imageUploading)
+			$('#fakeInput-'+inputId).click();
+	});
+
+	uploadArea.bind('dragover', function (event) {
+
+		$(this).css('border-style', 'dashed');
+		$(this).css('border-width', '2px');
+		event.stopPropagation();
+		event.preventDefault();
+	});
+
+	uploadArea.bind('dragleave', function (event) {
+		$(this).css('border-style', 'solid');
+		$(this).css('border-width', '1px');
+		event.stopPropagation();
+		event.preventDefault();
+	});
+
+	uploadArea.bind('drop', function (evt) {
+		$(this).css('border-style', 'solid');
+		$(this).css('border-width', '1px');
+
+		var dt			= event.dataTransfer;
+		var files		= dt.files;
+		var fileCount	= files.length;
+
+		evt.stopPropagation();
+		evt.preventDefault();
+
+		if(!instance.imageUploading)
+		{
+			if(fileCount > 0)
+			{
+				var isImageFile		= false;
+
+				switch(files[0].type.toLowerCase())
+				{
+					case 'image/jpeg':
+						isImageFile		= true;
+						break;
+					case 'image/pjpeg':
+						isImageFile		= true;
+						break;
+					case 'image/gif':
+						isImageFile		= true;
+						break;
+					case 'image/png':
+						isImageFile		= true;
+						break;
+					default:
+						isImageFile		= false;
+						break;
+				}
+
+				if(!isImageFile) {
+
+					instance.setError('Error!', 'The file is not a valid image file.');
+				}else{
+					instance.uploadImage(files[0], files[0].type, files[0].name);
+				}
+			}
+		}
+	});
+
+	this.setupOnBeforeUnload();
+	this.setupModal();
+	this.bindDeleteButtons();
+}
+
+IOMultipleImageField.prototype = {
+	constructor: IOImageField,
+	imageFileStatus: function(event) {
+
+		var fileType;
+		var fileName;
+		var file;
+
+		if(event.target != undefined) {
+
+			fileType	= event.target.files[0].type;
+			fileName	= event.target.files[0].name;
+			file		= event.target.files[0];
+
+		}else if(event.srcElement != undefined) {
+			fileType	= event.srcElement.files[0].type;
+			fileName	= event.srcElement.files[0].name;
+			file		= event.srcElement.files[0];
+		}
+
+		if(fileType != undefined) {
+			var isImageFile		= false;
+
+			switch(fileType.toLowerCase()) {
+				case 'image/jpeg':
+					isImageFile		= true;
+					break;
+				case 'image/pjpeg':
+					isImageFile		= true;
+					break;
+				case 'image/gif':
+					isImageFile		= true;
+					break;
+				case 'image/png':
+					isImageFile		= true;
+					break;
+				default:
+					isImageFile		= false;
+					break;
+			}
+
+			if(!isImageFile) {
+				this.setError('Error!', 'The file is not a valid image file.');
+			}else{
+				this.uploadImage(file, fileType, fileName);
+			}
+		}
+	},
+	uploadImage: function(file, fileType, fileName) {
+
+		this.imageUploading		= true;
+		this.setProgressbar(10);
+		$('#progress-' + this.inputId).show();
+
+		var reader						= new FileReader();
+		var instance					= this;
+		var uploadUrl					= this.uploadRoute;
+
+		reader.onloadend = function() {
+
+			var fileData		= reader.result;
+
+			$.ajax(
+				{
+					url: uploadUrl,
+					cache: false,
+					contentType: 'application/json; charset=UTF-8',
+					data: JSON.stringify({
+						"imageData"		: fileData,
+						"imageType"		: fileType,
+						"imageName"		: fileName,
+						"fieldId"		: instance.inputId
+					}),
+					dataType: 'json',
+					type: 'POST',
+					xhr: function () {
+						var xhr = new window.XMLHttpRequest();
+						xhr.addEventListener("progress", function (evt) {
+
+							if (evt.lengthComputable) {
+								var percentComplete = Math.round(evt.loaded / evt.total * 100);
+								instance.setProgressbar(percent);
+							}
+						}, false);
+						return xhr;
+					},
+					success: function(response)
+					{
+						if(response.status) {
+
+							instance.imageUploading			= false;
+							instance.imageUploadComplete(response.data);
+						}else{
+
+							instance.imageUploading			= false;
+							instance.setProgressbar(100);
+							instance.setError('Error!', response.data);
+						}
+					},
+					error: function() {
+
+						instance.imageUploading			= false;
+						instance.setProgressbar(100);
+						instance.setError('Error!', 'An error has occured');
+					}
+				}
+			);
+		};
+
+		reader.readAsDataURL(file);
+	},
+	imageUploadComplete	: function(fileName) {
+
+		this.setProgressbar(100);
+		this.imageUploading		= false;
+		var imageUrl			= this.uploadPath + '/' + fileName;
+		$('#uploadArea-'+this.inputId).append('<div id="multipleimagearea-' + this.inputId + '-' + this.currentLoopIdx + '" data-loopidx="' + this.currentLoopIdx + '"><a class="deletethisimage" href="#deletethisimage">x</a><img src="' + imageUrl + '"></div>');
+		$('#adminMultipleImageUploadAreaInputs-' + this.inputId).append('<input type="hidden" name="' + this.fullName + '[]" value="' + fileName + '" data-loopidx="' + this.currentLoopIdx + '" />');
+		this.currentLoopIdx += 1;
+		this.unbindDeleteButtons();
+		this.bindDeleteButtons();
+	},
+	setupOnBeforeUnload			: function() {
+		var ua							= window.navigator.userAgent;
+		var msie						= ua.indexOf("MSIE ");
+		var instance					= this;
+		if(msie <= 0) {
+			window.onbeforeunload	= function(event) {
+				if(instance.imageUploading)
+				{
+					event.returnValue	= 'Uploading progress does not finished yet. Do you want to continue ?';
+				}
+			};
+		}
+	},
+	setupModal					: function() {
+		var modalHtml				= '<div class="modal fade" id="imageUploadAlertDialog"><div class="modal-dialog"><div class="modal-content">';
+		modalHtml					+= '<div class="modal-header"> <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>';
+		modalHtml					+= '<h4 class="modal-title" id="imageUploadAlertDialogTitle"></h4>';
+		modalHtml					+= '</div><div class="modal-body">';
+		modalHtml					+= '<p id="imageUploadAlertDialogMessage"></p>';
+		modalHtml					+= '</div><div class="modal-footer"><button type="button" class="btn btn-default" data-dismiss="modal">Close</button>';
+		modalHtml					+= '</div></div></div></div>';
+
+		if($('#imageUploadAlertDialog').length <= 0) {
+			$('body').append(modalHtml);
+		}
+	},
+	setError					: function(title, message) {
+		$('#imageUploadAlertDialogTitle').html(title);
+		$('#imageUploadAlertDialogMessage').html(message);
+		$('#imageUploadAlertDialog').modal('show');
+	},
+	setProgressbar: function(percent) {
+		var progress			= $('#progress-' + this.inputId);
+		var progressBar			= progress.children('.progress-bar');
+		progressBar.attr('aria-valuenow', percent);
+		progressBar.css('width', percent + '%');
+		progressBar.html(percent + '%');
+
+		if(percent == 100) {
+			setTimeout(function() {
+				progress.hide();
+			}, 1000);
+		}
+	},
+	bindDeleteButtons: function () {
+
+		var instance = this;
+		var uploadArea = $('#uploadArea-' + this.inputId);
+		uploadArea.children().each(function () {
+
+			var $this = $(this);
+			var loopIdx = $this.attr('data-loopidx');
+			$this.children('a').click(function (evt) {
+
+				instance.imageUploading = true;
+				evt.preventDefault();
+				instance.deleteImage(loopIdx);
+			});
+		});
+	},
+	unbindDeleteButtons: function () {
+
+		var uploadArea = $('#uploadArea-' + this.inputId);
+		uploadArea.children().each(function () {
+
+			var $this = $(this);
+			$this.children('a').unbind('click');
+		});
+	},
+	deleteImage: function (loopIdx) {
+
+		$('#multipleimagearea-' + this.inputId + '-' + loopIdx).remove();
+		$('#adminMultipleImageUploadAreaInputs-' + this.inputId).children().each(function () {
+
+			var $this = $(this);
+			var currentLoopIdx = $this.attr('data-loopidx');
+			if(currentLoopIdx == loopIdx) {
+				$this.remove();
+			}
+		});
+
+		var instance = this;
+		setTimeout(function () {
+
+			instance.imageUploading = false;
+		}, 750);
 	}
 };

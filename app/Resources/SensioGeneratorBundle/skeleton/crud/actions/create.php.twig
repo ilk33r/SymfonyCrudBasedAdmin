@@ -41,7 +41,12 @@
 			if(!$error)
 			{
 				$this->addDataSuccess = true;
-				return $this->showAction($entity->getId());
+				{% if 'annotation' == format %}
+				$data = $this->showAction($entity->getId());
+				$this->render('{{ bundle }}:{{ entity|replace({'\\': '/'}) }}:show.html.twig', $data);
+				{% else %}
+					return $this->showAction($entity->getId());
+				{% endif %}
 			}
         }
 {% endblock method_body %}
@@ -69,14 +74,14 @@
      *
      * @return \Symfony\Component\Form\Form The form
      */
-    private function createCreateForm({{ entity_class }} $entity)
+    private function createCreateForm({{ entity_class }}Type $entity)
     {
-        $form = $this->createForm(new {{ entity_class }}Type(), $entity, array(
+		$form = $this->createForm({{ entity_class }}::class, $entity, array(
             'action' => $this->generateUrl('{{ route_name_prefix }}_create'),
             'method' => 'POST',
         ));
 
-        $form->add('submit', 'submit', array('label' => 'Create'));
+        $form->add('submit', SubmitType::class, array('label' => 'Create'));
 
         return $form;
     }

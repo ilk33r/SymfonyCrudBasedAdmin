@@ -31,7 +31,7 @@
 				<td><a href="{{ path('io_admin_show_user', { 'userName': entity.usernameCanonical }) }}">{{ entity.email }}</a></td>
 				<td><a href="{{ path('io_admin_show_user', { 'userName': entity.usernameCanonical }) }}">{{ entity.lastLogin|date('Y-m-d H:i:s') }}</a></td>
 				<td><a href="{{ path('io_admin_show_user', { 'userName': entity.usernameCanonical }) }}">{% if entity.passwordRequestedAt is not empty %}{{ entity.passwordRequestedAt|date('Y-m-d H:i:s') }}{% endif %}</a></td>
-				<td><a href="{{ path('io_admin_show_user', { 'userName': entity.usernameCanonical }) }}">{{ entity.roles|join('<br />') }}</a></td>
+				<td><a href="{{ path('io_admin_show_user', { 'userName': entity.usernameCanonical }) }}">{{ entity.roles|join('<br />')|raw }}</a></td>
 				<td><a href="{{ path('io_admin_show_user', { 'userName': entity.usernameCanonical }) }}">{% if entity.enabled == 1 %}YES{% else %}NO{% endif %}</a></td>
 				<td><a href="{{ path('io_admin_show_user', { 'userName': entity.usernameCanonical }) }}">{% if entity.locked == 1 %}YES{% else %}NO{% endif %}</a></td>
 				<td><a href="{{ path('io_admin_show_user', { 'userName': entity.usernameCanonical }) }}">{% if entity.expired == 1 %}YES{% else %}NO{% endif %}</a></td>

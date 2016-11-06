@@ -24,7 +24,7 @@
 
 <div class="adminImageUploadArea" id="uploadArea-{{ form.vars.id }}">
 	{% if form.vars.value is not empty %}
-		{% set imageRealPath = form.vars.uploadPath ~ form.vars.value %}
+		{% set imageRealPath = form.vars.uploadPath ~ '/' ~ form.vars.value %}
 	<img src="{{ asset(imageRealPath) }}" />
 	{% else %}
 	<span>Drag image here!</span>
@@ -42,34 +42,66 @@
 
 {% endblock %}
 
-{% block admin_richText_widget %}
+{% block admin_ajax_multiple_file_upload_widget %}
 
-	<div class="btn-group">
-		<button class="btn btn-default" type="button" id="btnRichTextBold"><i class="glyphicon glyphicon-bold"></i>Bold</button>
-		<button class="btn btn-default" type="button" id="btnRichTextItalic"><i class="glyphicon glyphicon-italic"></i>Italic</button>
-		<button class="btn btn-default" type="button" id="btnRichTextUnderline"><i class="glyphicon glyphicon-text-color"></i>Underline</button>
-		<button class="btn btn-default" type="button" id="btnRichTextHead"><i class="glyphicon glyphicon-header"></i>Head</button>
-		<button class="btn btn-default" type="button" id="btnRichTextLeft"><i class="glyphicon glyphicon-align-left"></i>Left</button>
-		<button class="btn btn-default" type="button" id="btnRichTextCenter"><i class="glyphicon glyphicon-align-center"></i>Center</button>
-		<button class="btn btn-default" type="button" id="btnRichTextRight"><i class="glyphicon glyphicon-align-right"></i>Right</button>
-		<button class="btn btn-default" type="button" id="btnRichTextOrderedList"><i class="glyphicon glyphicon-list"></i>Ordered List</button>
-		<button class="btn btn-default" type="button" id="btnRichTextUnorderedList"><i class="glyphicon glyphicon-th-list"></i>Unordered List</button>
-		<button class="btn btn-default" type="button" id="btnRichTextCreateLink"><i class="glyphicon glyphicon-link"></i>Create Link</button>
-		<button class="btn btn-default" type="button" id="btnRichTextAddPicture"><i class="glyphicon glyphicon-picture"></i>Add Picture</button>
-		<button class="btn btn-default" type="button" id="btnRichTextCut"><i class="glyphicon glyphicon-scissors"></i>Cut</button>
-		<button class="btn btn-default" type="button" id="btnRichTextCopy"><i class="glyphicon glyphicon-copy"></i>Copy</button>
-		<button class="btn btn-default" type="button" id="btnRichTextPaste"><i class="glyphicon glyphicon-paste"></i>Paste</button>
-		<button class="btn btn-default" type="button" id="btnRichTextUndo"><i class="glyphicon glyphicon-arrow-left"></i>Undo</button>
-		<button class="btn btn-default" type="button" id="btnRichTextRedo"><i class="glyphicon glyphicon-arrow-right"></i>Redo</button>
-		<button class="btn btn-default" type="button" id="btnRichTextHtml"><i class="glyphicon glyphicon-modal-window"></i>Html Code</button>
-		<button class="btn btn-default" type="button" id="btnRichTextRemoveFormat"><i class="glyphicon glyphicon-modal-trash"></i>Remove Format</button>
+	<div class="adminMultipleImageUploadAreaScroll">
+		<div class="adminMultipleImageUploadArea adminImageUploadArea" id="uploadArea-{{ form.vars.id }}">
+			{% if form.vars.value is not empty %}
+				{% for imageName in form.vars.value %}
+					<div id="multipleimagearea-{{ form.vars.id }}-{{ loop.index0 }}" data-loopidx="{{ loop.index0 }}">
+						<a class="deletethisimage" href="#deletethisimage">x</a>
+						<img src="{{ asset(form.vars.uploadPath ~ '/' ~ imageName) }}">
+					</div>
+				{% endfor %}
+			{% else %}
+				<span>Drag one or more images here!</span>
+			{% endif %}
+		</div>
 	</div>
-	<div class="richTextField form-control" id="adminRichTextDiv" contenteditable="true">
-		{%- if form.vars.value is not empty -%}
-			{{ form.vars.value }}
-		{%- endif -%}
+
+	<input type="file" class="fakeInput" id="fakeInput-{{ form.vars.id }}" name="fakeInput-{{ form.vars.id }}" />
+	<div class="progress" id="progress-{{ form.vars.id }}">
+		<div class="progress-bar" role="progressbar" aria-valuenow="5" aria-valuemin="0" aria-valuemax="100" style="width: 5%;">0%</div>
 	</div>
-	<input type="hidden" name="{{ form.vars.full_name }}" value="" id="{{ form.vars.id }}"/>';
-	<script type="text/javascript">window.addEventListener('load', function(){new IORichText('{{ form.vars.id }}');});</script>';
+	<div id="adminMultipleImageUploadAreaInputs-{{ form.vars.id }}">
+	{% if form.vars.value is not empty %}
+		{% for imageName in form.vars.value %}
+			<input type="hidden" name="{{ form.vars.full_name }}[]" value="{{ imageName }}" data-loopidx="{{ loop.index0 }}" />
+		{% endfor %}
+	{% endif %}
+	</div>
+	<script type="text/javascript">window.addEventListener('load',  function(){new IOMultipleImageField('{{ form.vars.id }}', '{{ form.vars.uploadPath }}', '{{ path(form.vars.uploadRoute) }}', '{{ form.vars.full_name }}');});</script>
+
+{% endblock %}
+
+{% block admin_rich_text_widget %}
+
+<div class="btn-group">
+	<button class="btn btn-default" type="button" id="btnRichTextBold-{{ form.vars.id }}"><i class="glyphicon glyphicon-bold"></i>Bold</button>
+	<button class="btn btn-default" type="button" id="btnRichTextItalic-{{ form.vars.id }}"><i class="glyphicon glyphicon-italic"></i>Italic</button>
+	<button class="btn btn-default" type="button" id="btnRichTextUnderline-{{ form.vars.id }}"><i class="glyphicon glyphicon-text-color"></i>Underline</button>
+	<button class="btn btn-default" type="button" id="btnRichTextHead-{{ form.vars.id }}"><i class="glyphicon glyphicon-header"></i>Head</button>
+	<button class="btn btn-default" type="button" id="btnRichTextLeft-{{ form.vars.id }}"><i class="glyphicon glyphicon-align-left"></i>Left</button>
+	<button class="btn btn-default" type="button" id="btnRichTextCenter-{{ form.vars.id }}"><i class="glyphicon glyphicon-align-center"></i>Center</button>
+	<button class="btn btn-default" type="button" id="btnRichTextRight-{{ form.vars.id }}"><i class="glyphicon glyphicon-align-right"></i>Right</button>
+	<button class="btn btn-default" type="button" id="btnRichTextOrderedList-{{ form.vars.id }}"><i class="glyphicon glyphicon-list"></i>Ordered List</button>
+	<button class="btn btn-default" type="button" id="btnRichTextUnorderedList-{{ form.vars.id }}"><i class="glyphicon glyphicon-th-list"></i>Unordered List</button>
+	<button class="btn btn-default" type="button" id="btnRichTextCreateLink-{{ form.vars.id }}"><i class="glyphicon glyphicon-link"></i>Create Link</button>
+	<button class="btn btn-default" type="button" id="btnRichTextAddPicture-{{ form.vars.id }}"><i class="glyphicon glyphicon-picture"></i>Add Picture</button>
+	<button class="btn btn-default" type="button" id="btnRichTextCut-{{ form.vars.id }}"><i class="glyphicon glyphicon-scissors"></i>Cut</button>
+	<button class="btn btn-default" type="button" id="btnRichTextCopy-{{ form.vars.id }}"><i class="glyphicon glyphicon-copy"></i>Copy</button>
+	<button class="btn btn-default" type="button" id="btnRichTextPaste-{{ form.vars.id }}"><i class="glyphicon glyphicon-paste"></i>Paste</button>
+	<button class="btn btn-default" type="button" id="btnRichTextUndo-{{ form.vars.id }}"><i class="glyphicon glyphicon-arrow-left"></i>Undo</button>
+	<button class="btn btn-default" type="button" id="btnRichTextRedo-{{ form.vars.id }}"><i class="glyphicon glyphicon-arrow-right"></i>Redo</button>
+	<button class="btn btn-default" type="button" id="btnRichTextHtml-{{ form.vars.id }}"><i class="glyphicon glyphicon-modal-window"></i>Html Code</button>
+	<button class="btn btn-default" type="button" id="btnRichTextRemoveFormat-{{ form.vars.id }}"><i class="glyphicon glyphicon-modal-trash"></i>Remove Format</button>
+</div>
+<div class="richTextField form-control" id="adminRichTextDiv-{{ form.vars.id }}" contenteditable="true">
+	{%- if form.vars.value is not empty -%}
+		{{ form.vars.value|raw }}
+	{%- endif -%}
+</div>
+<input type="hidden" name="{{ form.vars.full_name }}" value="" id="{{ form.vars.id }}"/>
+<script type="text/javascript">window.addEventListener('load', function(){new IORichText('{{ form.vars.id }}');});</script>
 
 {% endblock %}

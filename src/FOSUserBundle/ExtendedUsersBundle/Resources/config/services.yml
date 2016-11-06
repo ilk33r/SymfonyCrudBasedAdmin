@@ -1,1 +1,3 @@
 services:
+    app.authentication_handler:
+        class: FOSUserBundle\ExtendedUsersBundle\Services\SecurityService

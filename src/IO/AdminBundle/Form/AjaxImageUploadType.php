@@ -42,4 +42,8 @@ class AjaxImageUploadType extends AbstractType
 	{
 		return 'admin_ajax_file_upload';
 	}
+
+	public function getBlockPrefix() {
+		return 'admin_ajax_file_upload';
+	}
 }

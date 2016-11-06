@@ -9,16 +9,17 @@
 namespace IO\AdminBundle\Form;
 
 use Symfony\Component\Form\AbstractType;
+use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 
 class AdminRichTextType extends AbstractType
 {
 	public function getParent()
 	{
-		return 'textarea';
+		return TextareaType::class;
 	}
 
 	public function getName()
 	{
-		return 'admin_richText';
+		return 'admin_rich_text';
 	}
 }
