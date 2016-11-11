@@ -138,6 +138,7 @@ class MinifyAssetsCommand extends ContainerAwareCommand  {
 			->setDescription('Minify css and javascript assets')
 			->setHelp("admin:minify_assets_command [asset version]")
 			->addArgument('assetVersion', InputArgument::REQUIRED, 'Asset Version')
+		    ->addOption('onlycss', 'oc', InputArgument::OPTIONAL, 'Just copy css assets.', 'false')
 		;
     }
 
@@ -150,6 +151,7 @@ class MinifyAssetsCommand extends ContainerAwareCommand  {
 		/** @var \AppKernel $appKernel */
 		$appKernel = $this->getContainer()->get('kernel');
 		$rootDir = $appKernel->getRootDir() . '/../';
+	    $cssOption = ($input->getOption('onlycss') == 'false') ? false : true;
 
 		// [type] [uglify] [combine file name|no]
 		// [source file name] [destination file name]
@@ -180,7 +182,7 @@ class MinifyAssetsCommand extends ContainerAwareCommand  {
 				$this->addFileToCombineList( $combineFiles, $combineFileGroup, $currentIdx, $destinationPath . '/' . $combineFileGroup);
 				$output->writeln( 'Copy file completed ' . $destinationFileName );
 
-			} elseif ( $asset[0] == 'js' ) {
+			} elseif ( $asset[0] == 'js' && !$cssOption) {
 
 				if ( ! $uglify ) {
 
@@ -207,121 +209,123 @@ class MinifyAssetsCommand extends ContainerAwareCommand  {
 			$currentIdx += 1;
 		}
 
-	    foreach ( $combineFiles as $fileName => $fileIndexes ) {
+		if(!$cssOption) {
+			foreach ( $combineFiles as $fileName => $fileIndexes ) {
 
-		    if ( $fileName == 'no' ) {
-			    continue;
-		    }
+				if ( $fileName == 'no' ) {
+					continue;
+				}
 
-		    $output->writeln( 'Combining file ' . $fileName );
+				$output->writeln( 'Combining file ' . $fileName );
 
-		    foreach ( $fileIndexes as $fileIdx ) {
+				foreach ( $fileIndexes as $fileIdx ) {
 
-			    $destinationPath = $rootDir . self::ASSET_LIST[ $fileIdx ][6];
-			    $destinationFile = $destinationPath . '/' . $fileName;
-			    $sourceFileName  = ( strpos( self::ASSET_LIST[ $fileIdx ][4], '%s' ) ) ? vsprintf( self::ASSET_LIST[ $fileIdx ][4], $assetVersion ) : self::ASSET_LIST[ $fileIdx ][4];
-			    $sourceFile      = $destinationPath . '/' . $sourceFileName;
+					$destinationPath = $rootDir . self::ASSET_LIST[ $fileIdx ][6];
+					$destinationFile = $destinationPath . '/' . $fileName;
+					$sourceFileName  = ( strpos( self::ASSET_LIST[ $fileIdx ][4], '%s' ) ) ? vsprintf( self::ASSET_LIST[ $fileIdx ][4], $assetVersion ) : self::ASSET_LIST[ $fileIdx ][4];
+					$sourceFile      = $destinationPath . '/' . $sourceFileName;
 
-			    if ( file_exists( $destinationFile ) ) {
+					if ( file_exists( $destinationFile ) ) {
 
-				    $fileHandle = fopen( $destinationFile, 'a' );
-				    fwrite( $fileHandle, "\n" );
-				    fwrite( $fileHandle, file_get_contents( $sourceFile ) );
-				    fclose( $fileHandle );
-			    } else {
-				    $fileHandle = fopen( $destinationFile, 'w' );
-				    fwrite( $fileHandle, file_get_contents( $sourceFile ) );
-				    fclose( $fileHandle );
-			    }
+						$fileHandle = fopen( $destinationFile, 'a' );
+						fwrite( $fileHandle, "\n" );
+						fwrite( $fileHandle, file_get_contents( $sourceFile ) );
+						fclose( $fileHandle );
+					} else {
+						$fileHandle = fopen( $destinationFile, 'w' );
+						fwrite( $fileHandle, file_get_contents( $sourceFile ) );
+						fclose( $fileHandle );
+					}
 
-			    unlink( $sourceFile );
-		    }
-	    }
+					unlink( $sourceFile );
+				}
+			}
 
-	    $combineFiles = array();
-	    $currentIdx = 0;
+			$combineFiles = array();
+			$currentIdx   = 0;
 
-	    foreach (self::JS_TEMPLATES as $jsTemplate) {
+			foreach ( self::JS_TEMPLATES as $jsTemplate ) {
 
-		    $destinationPath = $rootDir . $jsTemplate[4];
+				$destinationPath = $rootDir . $jsTemplate[4];
 
-		    $destinationFileName = ( strpos( $jsTemplate[2], '%s' ) ) ? vsprintf( $jsTemplate[2], $assetVersion ) : $jsTemplate[2];
-		    $destinationFile     = $destinationPath . '/' . $destinationFileName;
-		    $combineFileGroup    = ( strpos( $jsTemplate[1], '%s' ) ) ? vsprintf( $jsTemplate[1], $assetVersion ) : $jsTemplate[1];
-		    $uglify              = ( $jsTemplate[0] == 'yes' ) ? true : false;
+				$destinationFileName = ( strpos( $jsTemplate[2], '%s' ) ) ? vsprintf( $jsTemplate[2], $assetVersion ) : $jsTemplate[2];
+				$destinationFile     = $destinationPath . '/' . $destinationFileName;
+				$combineFileGroup    = ( strpos( $jsTemplate[1], '%s' ) ) ? vsprintf( $jsTemplate[1], $assetVersion ) : $jsTemplate[1];
+				$uglify              = ( $jsTemplate[0] == 'yes' ) ? true : false;
 
-		    if ( file_exists( $destinationFile ) ) {
+				if ( file_exists( $destinationFile ) ) {
 
-			    unlink( $destinationFile );
-		    }
+					unlink( $destinationFile );
+				}
 
-		    /** @var TwigEngine $templating */
-		    $templating = $this->getContainer()->get('templating');
-		    $renderedJS = $templating->render($jsTemplate[3], array('compileMod' => true));
-		    $tmpDestinationFile = $destinationPath . '/tmp_' . $destinationFileName;
-		    if(file_exists($tmpDestinationFile)) {
-			    unlink($tmpDestinationFile);
-		    }
+				/** @var TwigEngine $templating */
+				$templating         = $this->getContainer()->get( 'templating' );
+				$renderedJS         = $templating->render( $jsTemplate[3], array( 'compileMod' => true ) );
+				$tmpDestinationFile = $destinationPath . '/tmp_' . $destinationFileName;
+				if ( file_exists( $tmpDestinationFile ) ) {
+					unlink( $tmpDestinationFile );
+				}
 
-		    $tmpDestinationFileHandle = fopen($tmpDestinationFile, 'w');
-		    fwrite($tmpDestinationFileHandle, $renderedJS);
-		    fclose($tmpDestinationFileHandle);
+				$tmpDestinationFileHandle = fopen( $tmpDestinationFile, 'w' );
+				fwrite( $tmpDestinationFileHandle, $renderedJS );
+				fclose( $tmpDestinationFileHandle );
 
-		    if ( ! $uglify ) {
+				if ( ! $uglify ) {
 
-			    copy( $tmpDestinationFile, $destinationFile );
-			    $output->writeln( 'Copy file copleted ' . $destinationFileName );
-			    unlink($tmpDestinationFile);
+					copy( $tmpDestinationFile, $destinationFile );
+					$output->writeln( 'Copy file copleted ' . $destinationFileName );
+					unlink( $tmpDestinationFile );
 
-		    } else {
+				} else {
 
-			    $execCommand = 'uglifyjs ' . $tmpDestinationFile . ' -c -o ' . $destinationFile;
-			    $outputsUJS  = array();
-			    exec( $execCommand, $outputsUJS );
+					$execCommand = 'uglifyjs ' . $tmpDestinationFile . ' -c -o ' . $destinationFile;
+					$outputsUJS  = array();
+					exec( $execCommand, $outputsUJS );
 
-			    foreach ( $outputsUJS as $outputUJS ) {
+					foreach ( $outputsUJS as $outputUJS ) {
 
-				    $output->writeln( $outputUJS );
-			    }
+						$output->writeln( $outputUJS );
+					}
 
-			    $output->writeln( 'Uglify file completed ' . $destinationFileName );
-			    unlink($tmpDestinationFile);
-		    }
+					$output->writeln( 'Uglify file completed ' . $destinationFileName );
+					unlink( $tmpDestinationFile );
+				}
 
-		    $this->addFileToCombineList( $combineFiles, $combineFileGroup, $currentIdx, $destinationPath . '/' . $combineFileGroup );
-		    $currentIdx += 1;
-	    }
+				$this->addFileToCombineList( $combineFiles, $combineFileGroup, $currentIdx, $destinationPath . '/' . $combineFileGroup );
+				$currentIdx += 1;
+			}
 
-	    foreach ( $combineFiles as $fileName => $fileIndexes ) {
+			foreach ( $combineFiles as $fileName => $fileIndexes ) {
 
-		    if ( $fileName == 'no' ) {
-			    continue;
-		    }
+				if ( $fileName == 'no' ) {
+					continue;
+				}
 
-		    $output->writeln( 'Combining file ' . $fileName );
+				$output->writeln( 'Combining file ' . $fileName );
 
-		    foreach ( $fileIndexes as $fileIdx ) {
+				foreach ( $fileIndexes as $fileIdx ) {
 
-			    $destinationPath = $rootDir . self::JS_TEMPLATES[ $fileIdx ][4];
-			    $destinationFile = $destinationPath . '/' . $fileName;
-			    $sourceFileName = ( strpos( self::JS_TEMPLATES[ $fileIdx ][2], '%s' ) ) ? vsprintf( self::JS_TEMPLATES[ $fileIdx ][2], $assetVersion ) : self::JS_TEMPLATES[ $fileIdx ][2];
-			    $sourceFile      = $destinationPath . '/' . $sourceFileName;
+					$destinationPath = $rootDir . self::JS_TEMPLATES[ $fileIdx ][4];
+					$destinationFile = $destinationPath . '/' . $fileName;
+					$sourceFileName  = ( strpos( self::JS_TEMPLATES[ $fileIdx ][2], '%s' ) ) ? vsprintf( self::JS_TEMPLATES[ $fileIdx ][2], $assetVersion ) : self::JS_TEMPLATES[ $fileIdx ][2];
+					$sourceFile      = $destinationPath . '/' . $sourceFileName;
 
-			    if ( file_exists( $destinationFile ) ) {
+					if ( file_exists( $destinationFile ) ) {
 
-				    $fileHandle = fopen( $destinationFile, 'a' );
-				    fwrite( $fileHandle, "\n" );
-				    fwrite( $fileHandle, file_get_contents( $sourceFile ) );
-				    fclose( $fileHandle );
-			    } else {
-				    $fileHandle = fopen( $destinationFile, 'w' );
-				    fwrite( $fileHandle, file_get_contents( $sourceFile ) );
-				    fclose( $fileHandle );
-			    }
+						$fileHandle = fopen( $destinationFile, 'a' );
+						fwrite( $fileHandle, "\n" );
+						fwrite( $fileHandle, file_get_contents( $sourceFile ) );
+						fclose( $fileHandle );
+					} else {
+						$fileHandle = fopen( $destinationFile, 'w' );
+						fwrite( $fileHandle, file_get_contents( $sourceFile ) );
+						fclose( $fileHandle );
+					}
 
-			    unlink( $sourceFile );
-		    }
-	    }
+					unlink( $sourceFile );
+				}
+			}
+		}
     }
 
 	/**

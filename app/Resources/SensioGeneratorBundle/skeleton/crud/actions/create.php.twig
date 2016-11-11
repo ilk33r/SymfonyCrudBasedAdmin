@@ -5,7 +5,7 @@
      *
 {% block phpdoc_method_annotations %}
 {% if 'annotation' == format %}
-     * @Route("/", name="{{ route_name_prefix }}_create")
+     * @Route("/create/", name="{{ route_name_prefix }}_create")
      * @Method("POST")
      * @Template("{{ bundle }}:{{ entity }}:new.html.twig")
 {% endif %}
@@ -74,9 +74,9 @@
      *
      * @return \Symfony\Component\Form\Form The form
      */
-    private function createCreateForm({{ entity_class }}Type $entity)
+    private function createCreateForm({{ entity_class }} $entity)
     {
-		$form = $this->createForm({{ entity_class }}::class, $entity, array(
+		$form = $this->createForm({{ entity_class }}Type::class, $entity, array(
             'action' => $this->generateUrl('{{ route_name_prefix }}_create'),
             'method' => 'POST',
         ));

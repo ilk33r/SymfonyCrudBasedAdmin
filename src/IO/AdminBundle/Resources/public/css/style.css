@@ -57,3 +57,16 @@ a.changePasswordLink:hover{color: #acacac;}
 .adminPageRow .adminMultipleImageUploadArea > div > a {	font-size: 24px; position: absolute; top: 8px; right: 8px; font-weight: 900;
 	background: rgba(0, 0, 0, 0.6); width: 36px; height: 39px; display: inline-block; text-align: center; border-radius: 8px;
 	color: #f00;}
+
+#IOAdminLoadingModal i.glyphicon{-webkit-animation: loading-indicator 1.5s linear infinite;
+	animation: loading-indicator 1.5s linear infinite;}
+
+
+@-webkit-keyframes loading-indicator {
+	from {transform: rotate(0deg);}
+	to {transform: rotate(360deg)}
+}
+@keyframes loading-indicator {
+	from {transform: rotate(0deg);}
+	to {transform: rotate(360deg)}
+}

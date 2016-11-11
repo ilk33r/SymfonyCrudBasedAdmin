@@ -335,8 +335,7 @@ IORichText.prototype			= {
 };
 
 // ajax image uploader
-function IOImageField(inputId, uploadPath, uploadRoute)
-{
+function IOImageField(inputId, uploadPath, uploadRoute) {
 	this.inputId				= inputId;
 	this.imageUploading			= false;
 	this.uploadPath				= uploadPath;
@@ -349,30 +348,27 @@ function IOImageField(inputId, uploadPath, uploadRoute)
 			instance.imageFileStatus(event);
 	});
 
-	$('#uploadArea-'+inputId).click(function()
-	{
+	var uploadArea = $('#uploadArea-'+inputId);
+	uploadArea.click(function() {
 		if(!instance.imageUploading)
 			$('#fakeInput-'+inputId).click();
 	});
 
-	$('#uploadArea-'+inputId).bind('dragover', function (event)
-	{
+	uploadArea.bind('dragover', function (event) {
 		$(this).css('border-style', 'dashed');
 		$(this).css('border-width', '2px');
 		event.stopPropagation();
 		event.preventDefault();
 	});
 
-	$('#uploadArea-'+inputId).bind('dragleave', function (event)
-	{
+	uploadArea.bind('dragleave', function (event) {
 		$(this).css('border-style', 'solid');
 		$(this).css('border-width', '1px');
 		event.stopPropagation();
 		event.preventDefault();
 	});
 
-	$('#uploadArea-'+inputId).bind('drop', function (evt)
-	{
+	uploadArea.bind('drop', function (evt) {
 		$(this).css('border-style', 'solid');
 		$(this).css('border-width', '1px');
 
@@ -417,6 +413,25 @@ function IOImageField(inputId, uploadPath, uploadRoute)
 			}
 		}
 	});
+
+	var deleteImageButton = $('#deleteImage-' + inputId);
+	if(deleteImageButton.length > 0) {
+
+		deleteImageButton.click(function (evt) {
+
+			evt.preventDefault();
+			var deletePath = $(this).attr('data-delete-route');
+			var uploadedImage = $('#' + instance.inputId).val();
+
+			if(uploadedImage.length > 3) {
+
+				if(deleteAction()) {
+
+					instance.deleteImage(deletePath, uploadedImage);
+				}
+			}
+		});
+	}
 
 	this.setupOnBeforeUnload();
 	this.setupModal();
@@ -474,8 +489,7 @@ IOImageField.prototype = {
 			}
 		}
 	},
-	uploadImage					: function(file, fileType, fileName)
-	{
+	uploadImage					: function(file, fileType, fileName) {
 		this.imageUploading		= true;
 		this.setProgressbar(10);
 		$('#progress-' + this.inputId).show();
@@ -484,8 +498,7 @@ IOImageField.prototype = {
 		var instance					= this;
 		var uploadUrl					= this.uploadRoute;
 
-		reader.onloadend = function()
-		{
+		reader.onloadend = function() {
 			var fileData		= reader.result;
 
 			$.ajax(
@@ -502,18 +515,34 @@ IOImageField.prototype = {
 					dataType: 'json',
 					type: 'POST',
 					xhr: function () {
-						var xhr = new window.XMLHttpRequest();
-						xhr.addEventListener("progress", function (evt) {
 
-							if (evt.lengthComputable) {
-								var percentComplete = Math.round(evt.loaded / evt.total * 100);
-								instance.setProgressbar(percent);
+						var xhr = $.ajaxSettings.xhr();
+
+						xhr.addEventListener('progress', function (evt) {
+
+							var percentComplete = Math.round(evt.loaded / evt.total * 100);
+							if(percentComplete > 10) {
+
+								instance.setProgressbar(percentComplete);
 							}
 						}, false);
+
+						if(xhr.upload) {
+
+							xhr.upload.addEventListener('progress', function (evt) {
+
+								var percentComplete = Math.round(evt.loaded / evt.total * 100);
+								if(percentComplete > 10) {
+
+									instance.setProgressbar(percentComplete);
+								}
+							}, false);
+
+						}
 						return xhr;
 					},
-					success: function(response)
-					{
+					success: function(response) {
+
 						if(response.status)
 						{
 							instance.imageUploading			= false;
@@ -524,8 +553,8 @@ IOImageField.prototype = {
 							instance.setError('Error!', response.data);
 						}
 					},
-					error: function()
-					{
+					error: function() {
+
 						instance.imageUploading			= false;
 						instance.setProgressbar(100);
 						instance.setError('Error!', 'An error has occured');
@@ -536,13 +565,13 @@ IOImageField.prototype = {
 
 		reader.readAsDataURL(file);
 	},
-	imageUploadComplete			: function(fileName)
-	{
+	imageUploadComplete: function(fileName) {
+
 		this.setProgressbar(100);
 		this.imageUploading		= false;
 		var imageUrl			= this.uploadPath + '/' + fileName;
-		$('#uploadArea-'+this.inputId).html('<img src="' + imageUrl + '">');
-		$('#'+this.inputId).val(fileName);
+		$('#uploadArea-' + this.inputId).html('<img src="' + imageUrl + '">');
+		$('#' + this.inputId).val(fileName);
 	},
 	setupOnBeforeUnload			: function()
 	{
@@ -581,8 +610,7 @@ IOImageField.prototype = {
 		$('#imageUploadAlertDialogMessage').html(message);
 		$('#imageUploadAlertDialog').modal('show');
 	},
-	setProgressbar				: function(percent)
-	{
+	setProgressbar: function(percent) {
 		var progress			= $('#progress-' + this.inputId);
 		var progressBar			= progress.children('.progress-bar');
 		progressBar.attr('aria-valuenow', percent);
@@ -596,17 +624,52 @@ IOImageField.prototype = {
 				progress.hide();
 			}, 1000);
 		}
+	},
+	deleteImage: function (deleteRoute, imageName) {
+
+		var loading = new LoadingModal();
+		this.imageUploading = true;
+		var instance = this;
+		$.ajax(
+			{
+				url: deleteRoute,
+				cache: false,
+				contentType: 'application/json; charset=UTF-8',
+				data: JSON.stringify({
+					"imageName": imageName,
+					"fieldId": instance.inputId
+				}),
+				dataType: 'json',
+				type: 'POST',
+				success: function(response) {
+
+					loading.hide();
+					loading = null;
+					$('#uploadArea-' + instance.inputId).html('');
+					$('#' + instance.inputId).val('');
+					instance.imageUploading	= false;
+				},
+				error: function() {
+
+					loading.hide();
+					loading = null;
+					instance.imageUploading	= false;
+					instance.setError('Error!', 'An error has occured');
+				}
+			}
+		);
 	}
 };
 
 // ajax multiple image uploader
-function IOMultipleImageField(inputId, uploadPath, uploadRoute, fullName) {
+function IOMultipleImageField(inputId, uploadPath, uploadRoute, fullName, deleteRoute) {
 
 	this.inputId = inputId;
 	this.imageUploading = false;
 	this.uploadPath = uploadPath;
 	this.uploadRoute = uploadRoute;
 	this.fullName = fullName;
+	this.deleteRoute = deleteRoute;
 	this.currentLoopIdx = 0;
 	var instance = this;
 
@@ -741,7 +804,7 @@ IOMultipleImageField.prototype = {
 	},
 	uploadImage: function(file, fileType, fileName) {
 
-		this.imageUploading		= true;
+		this.imageUploading	= true;
 		this.setProgressbar(10);
 		$('#progress-' + this.inputId).show();
 
@@ -767,18 +830,33 @@ IOMultipleImageField.prototype = {
 					dataType: 'json',
 					type: 'POST',
 					xhr: function () {
-						var xhr = new window.XMLHttpRequest();
-						xhr.addEventListener("progress", function (evt) {
 
-							if (evt.lengthComputable) {
-								var percentComplete = Math.round(evt.loaded / evt.total * 100);
-								instance.setProgressbar(percent);
+						var xhr = $.ajaxSettings.xhr();
+
+						xhr.addEventListener('progress', function (evt) {
+
+							var percentComplete = Math.round(evt.loaded / evt.total * 100);
+							if(percentComplete > 10) {
+
+								instance.setProgressbar(percentComplete);
 							}
 						}, false);
+
+						if(xhr.upload) {
+
+							xhr.upload.addEventListener('progress', function (evt) {
+
+								var percentComplete = Math.round(evt.loaded / evt.total * 100);
+								if(percentComplete > 10) {
+
+									instance.setProgressbar(percentComplete);
+								}
+							}, false);
+
+						}
 						return xhr;
 					},
-					success: function(response)
-					{
+					success: function(response) {
 						if(response.status) {
 
 							instance.imageUploading			= false;
@@ -802,12 +880,12 @@ IOMultipleImageField.prototype = {
 
 		reader.readAsDataURL(file);
 	},
-	imageUploadComplete	: function(fileName) {
+	imageUploadComplete: function(fileName) {
 
 		this.setProgressbar(100);
-		this.imageUploading		= false;
-		var imageUrl			= this.uploadPath + '/' + fileName;
-		$('#uploadArea-'+this.inputId).append('<div id="multipleimagearea-' + this.inputId + '-' + this.currentLoopIdx + '" data-loopidx="' + this.currentLoopIdx + '"><a class="deletethisimage" href="#deletethisimage">x</a><img src="' + imageUrl + '"></div>');
+		this.imageUploading	= false;
+		var imageUrl = this.uploadPath + '/' + fileName;
+		$('#uploadArea-'+this.inputId).append('<div id="multipleimagearea-' + this.inputId + '-' + this.currentLoopIdx + '" data-loopidx="' + this.currentLoopIdx + '" data-filename="' + fileName + '"><a class="deletethisimage" href="#deletethisimage">x</a><img src="' + imageUrl + '"></div>');
 		$('#adminMultipleImageUploadAreaInputs-' + this.inputId).append('<input type="hidden" name="' + this.fullName + '[]" value="' + fileName + '" data-loopidx="' + this.currentLoopIdx + '" />');
 		this.currentLoopIdx += 1;
 		this.unbindDeleteButtons();
@@ -845,8 +923,8 @@ IOMultipleImageField.prototype = {
 		$('#imageUploadAlertDialog').modal('show');
 	},
 	setProgressbar: function(percent) {
-		var progress			= $('#progress-' + this.inputId);
-		var progressBar			= progress.children('.progress-bar');
+		var progress= $('#progress-' + this.inputId);
+		var progressBar	= progress.children('.progress-bar');
 		progressBar.attr('aria-valuenow', percent);
 		progressBar.css('width', percent + '%');
 		progressBar.html(percent + '%');
@@ -865,12 +943,14 @@ IOMultipleImageField.prototype = {
 
 			var $this = $(this);
 			var loopIdx = $this.attr('data-loopidx');
-			$this.children('a').click(function (evt) {
+			if(loopIdx) {
+				$this.children('a').click(function (evt) {
 
-				instance.imageUploading = true;
-				evt.preventDefault();
-				instance.deleteImage(loopIdx);
-			});
+					instance.imageUploading = true;
+					evt.preventDefault();
+					instance.deleteImage(loopIdx);
+				});
+			}
 		});
 	},
 	unbindDeleteButtons: function () {
@@ -884,20 +964,70 @@ IOMultipleImageField.prototype = {
 	},
 	deleteImage: function (loopIdx) {
 
-		$('#multipleimagearea-' + this.inputId + '-' + loopIdx).remove();
+		var instance = this;
 		$('#adminMultipleImageUploadAreaInputs-' + this.inputId).children().each(function () {
 
 			var $this = $(this);
 			var currentLoopIdx = $this.attr('data-loopidx');
 			if(currentLoopIdx == loopIdx) {
-				$this.remove();
+
+				instance.postDeleteImage($this, currentLoopIdx, $this.val());
 			}
 		});
+	},
+	postDeleteImage: function (hiddenInput, loopIdx, imageName) {
 
 		var instance = this;
-		setTimeout(function () {
+		var loading = new LoadingModal();
+		this.imageUploading = true;
 
-			instance.imageUploading = false;
-		}, 750);
+		$.ajax(
+			{
+				url: instance.deleteRoute,
+				cache: false,
+				contentType: 'application/json; charset=UTF-8',
+				data: JSON.stringify({
+					"imageName": imageName,
+					"fieldId": instance.inputId
+				}),
+				dataType: 'json',
+				type: 'POST',
+				success: function(response) {
+
+					loading.hide();
+					loading = null;
+
+					hiddenInput.remove();
+					$('#multipleimagearea-' + instance.inputId + '-' + loopIdx).remove();
+					instance.imageUploading	= false;
+				},
+				error: function() {
+
+					loading.hide();
+					loading = null;
+					instance.imageUploading	= false;
+					instance.setError('Error!', 'An error has occured');
+				}
+			}
+		);
+	}
+};
+
+// Loading modal
+function LoadingModal() {
+
+	this.modalNode = $('#IOAdminLoadingModal');
+	this.modalNode.modal({
+		backdrop: 'static',
+		keyboard: false,
+		show: true
+	});
+}
+
+LoadingModal.prototype = {
+	constructor: LoadingModal,
+	hide: function () {
+
+		this.modalNode.modal('hide');
 	}
 };

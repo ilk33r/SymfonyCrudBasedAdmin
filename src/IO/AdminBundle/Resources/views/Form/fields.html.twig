@@ -38,6 +38,9 @@
 {{ form.vars.value }}
 {%- endif -%}
 " id="{{ form.vars.id }}" />
+	{% if form.vars.hasDeleteButton %}
+		<button type="button" class="btn btn-danger" data-delete-route="{{ path(form.vars.deleteRoute) }}" id="deleteImage-{{ form.vars.id }}">Delete Image</button>
+	{% endif %}
 <script type="text/javascript">window.addEventListener('load',  function(){new IOImageField('{{ form.vars.id }}', '{{ form.vars.uploadPath }}', '{{ path(form.vars.uploadRoute) }}');});</script>
 
 {% endblock %}
@@ -46,15 +49,14 @@
 
 	<div class="adminMultipleImageUploadAreaScroll">
 		<div class="adminMultipleImageUploadArea adminImageUploadArea" id="uploadArea-{{ form.vars.id }}">
+			<span>Drag one or more images here!</span>
 			{% if form.vars.value is not empty %}
 				{% for imageName in form.vars.value %}
-					<div id="multipleimagearea-{{ form.vars.id }}-{{ loop.index0 }}" data-loopidx="{{ loop.index0 }}">
+					<div id="multipleimagearea-{{ form.vars.id }}-{{ loop.index0 }}" data-loopidx="{{ loop.index0 }}" data-filename="{{ imageName }}">
 						<a class="deletethisimage" href="#deletethisimage">x</a>
 						<img src="{{ asset(form.vars.uploadPath ~ '/' ~ imageName) }}">
 					</div>
 				{% endfor %}
-			{% else %}
-				<span>Drag one or more images here!</span>
 			{% endif %}
 		</div>
 	</div>
@@ -70,7 +72,7 @@
 		{% endfor %}
 	{% endif %}
 	</div>
-	<script type="text/javascript">window.addEventListener('load',  function(){new IOMultipleImageField('{{ form.vars.id }}', '{{ form.vars.uploadPath }}', '{{ path(form.vars.uploadRoute) }}', '{{ form.vars.full_name }}');});</script>
+	<script type="text/javascript">window.addEventListener('load',  function(){new IOMultipleImageField('{{ form.vars.id }}', '{{ form.vars.uploadPath }}', '{{ path(form.vars.uploadRoute) }}', '{{ form.vars.full_name }}', '{{ path(form.vars.deleteRoute) }}');});</script>
 
 {% endblock %}
 
@@ -104,4 +106,8 @@
 <input type="hidden" name="{{ form.vars.full_name }}" value="" id="{{ form.vars.id }}"/>
 <script type="text/javascript">window.addEventListener('load', function(){new IORichText('{{ form.vars.id }}');});</script>
 
+{% endblock %}
+
+{% block admin_number_widget %}
+	<input type="number" {{ block('widget_attributes') }} {% if value is not empty %}value="{{ value }}" {% endif %} size="{{ form.vars.size }}" step="{{ form.vars.step }}"/>
 {% endblock %}

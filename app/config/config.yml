@@ -151,5 +151,6 @@ fos_user:
 io_admin:
     admin_prefix: /admin
     user_class: SomeBundle\Entity\User
+    page_title: "Administration Page"
     admin_menu:
-        #- { category: "Site Settings", path: "sitesettings", role: "ROLE_ADMIN" }
+        #- { category: "Site Settings", path: "sitesettings", role: "ROLE_ADMIN", list_title: "List", add_title: "Add" }

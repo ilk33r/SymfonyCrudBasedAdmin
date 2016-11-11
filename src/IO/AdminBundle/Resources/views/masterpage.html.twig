@@ -23,7 +23,7 @@
 <body>
 <div class="container-fluid adminContainer">
 	<div class="row clearfix adminHeader">
-		<div class="col-md-12 column"><h2>Administration Page</h2></div>
+		<div class="col-md-12 column"><h2>{{ io_admin.pageTitle }}</h2></div>
 	</div>
 	<div class="row clearfix adminPageRow">
 		<div class="col-md-2 column menuArea">
@@ -32,9 +32,9 @@
 				{% if is_granted(menuItem.role) %}
 				<span class="label menuGroup"><i class="glyphicon glyphicon-plus" aria-hidden="true"></i>{{ menuItem.category }}</span>
 				<ul>
-					<li><a href="{{ path(menuItem.path) }}" class="text-anchor">List {{ menuItem.category }}</a></li>
+					<li><a href="{{ path(menuItem.path) }}" class="text-anchor">{{ menuItem.list_title }}</a></li>
 					{% if menuItem.hasAddPermission == true %}
-					<li><a href="{{ path(menuItem.path ~ '_new') }}" class="text-anchor">Add {{ menuItem.category }}</a></li>
+					<li><a href="{{ path(menuItem.path ~ '_new') }}" class="text-anchor">{{ menuItem.add_title }}</a></li>
 					{% endif %}
 				</ul>
 				{% endif %}
@@ -66,9 +66,23 @@
 	</div>
 </div>
 
-<script type="text/javascript" src="{{ asset('bundles/ioadmin/js/jquery.min.js') }}"></script>
-<script type="text/javascript" src="{{ asset('bundles/ioadmin/js/bootstrap.min.js') }}"></script>
-<script type="text/javascript" src="{{ asset('bundles/ioadmin/js/scripts.js') }}"></script>
+<div class="modal fade" tabindex="-1" role="dialog" id="IOAdminLoadingModal">
+	<div class="modal-dialog modal-sm" role="document">
+		<div class="modal-content">
+			<div class="modal-body">
+				<p class="text-center">
+					<i class="glyphicon glyphicon-refresh"></i>
+				</p>
+			</div>
+		</div>
+	</div>
+</div>
+
+{% block AdminJavascripts %}
+	<script type="text/javascript" src="{{ asset('bundles/ioadmin/js/jquery.min.js') }}"></script>
+	<script type="text/javascript" src="{{ asset('bundles/ioadmin/js/bootstrap.min.js') }}"></script>
+	<script type="text/javascript" src="{{ asset('bundles/ioadmin/js/scripts.js') }}"></script>
+{% endblock %}
 
 </body>
 </html>

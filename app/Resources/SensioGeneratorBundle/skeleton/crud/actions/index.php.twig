@@ -6,7 +6,7 @@
      *
 {% block phpdoc_method_annotations %}
 {% if 'annotation' == format %}
-     * @Route("/", name="{{ route_name_prefix }}")
+     * @Route("/{pageNumber}", name="{{ route_name_prefix }}", requirements={"pageNumber": "\d+"})
      * @Method("GET")
      * @Template()
 {% endif %}
